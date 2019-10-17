@@ -1,0 +1,23 @@
+[package]
+name = "uctl"
+version = "0.1.0"
+authors = ["K. <kayo@illumium.org>"]
+description = "Generic control library for low-end hardware"
+edition = "2018"
+repository = "https://github.com/katyo/uctl"
+license = "MIT"
+readme = "README.md"
+keywords = ["fixed-point", "filter", "regulator", "control", "embedded"]
+categories = ["algorithms", "data-structures", "embedded", "no-std"]
+
+[badges]
+travis-ci = { repoitory = "katyo/uctl" }
+maintenance = { status = "experimental" }
+
+[dependencies]
+typenum = "1"
+generic-array = "0.13"
+
+[features]
+no_std = ["typenum/no_std"]
+i128 = ["typenum/i128"]
