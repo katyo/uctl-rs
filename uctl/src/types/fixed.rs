@@ -1,81 +1,94 @@
-//! Fixed-point number types.
-//!
-//! # What?
-//!
-//! Fixed-point is a number representation with a fixed number of digits before and after the radix
-//! point. This means that range is static rather than dynamic, as with floating-point. It also
-//! means that they can be represented as integers, with their scale tracked by the type system.
-//!
-//! In this library, the scale of a `Fix` is represented as two type-level integers: the base and
-//! the exponent. Any underlying integer primitive can be used to store the number. Arithmetic can
-//! be performed on these numbers, and they can be converted to different scale exponents.
-//!
-//! # Why?
-//!
-//! A classic example: let's sum 10 cents and 20 cents using floating-point. We expect a result of
-//! 30 cents.
-//!
-//! ```should_panic
-//! assert_eq!(0.30, 0.10 + 0.20);
-//! ```
-//!
-//! Wrong! We get an extra forty quintillionths of a dollar.
-//!
-//! ```text
-//! assertion failed: `(left == right)` (left: `0.3`, right: `0.30000000000000004`)'
-//! ```
-//!
-//! This is due to neither 0.1 nor 0.2 being exactly representable in base-2, just as a third can't
-//! be represented exactly in base-10. With `Fix`, we can choose the precision we want in base-10,
-//! at compile-time. In this case, hundredths of a dollar will do.
-//!
-//! ```
-//! use uctl::si::Centi; // Fix<_, U10, N2>
-//! assert_eq!(Centi::new(0_30), Centi::new(0_10) + Centi::new(0_20));
-//! ```
-//!
-//! But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
-//! slower than bit-shifting, but that's only needed when _moving_ the point. With `Fix`, this is
-//! only done explicitly with the `convert` method.
-//!
-//! ```
-//! use uctl::si::{Centi, Milli};
-//! assert_eq!(Milli::new(0_300), Centi::new(0_30).convert());
-//! ```
-//!
-//! We can also choose a base-2 scale just as easily.
-//!
-//! ```
-//! use uctl::iec::{Kibi, Mebi};
-//! assert_eq!(Kibi::new(1024), Mebi::new(1).convert());
-//! ```
-//!
-//! It's also worth noting that the type-level scale changes when multiplying and dividing,
-//! avoiding any implicit conversion.
-//!
-//! ```
-//! use uctl::iec::{Gibi, Kibi, Mebi};
-//! assert_eq!(Mebi::new(3), Gibi::new(6) / Kibi::new(2));
-//! ```
-//!
-//! # `no_std`
-//!
-//! This crate is `no_std`.
-//!
-//! # `i128` support
-//!
-//! Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` Cargo feature.
+/*!
 
-/// Type aliases.
-mod aliases;
+Fixed-point number types.
+
+# What?
+
+Fixed-point is a number representation with a fixed number of digits before and after the radix
+point. This means that range is static rather than dynamic, as with floating-point. It also
+means that they can be represented as integers, with their scale tracked by the type system.
+
+In this library, the scale of a `Fix` is represented as two type-level integers: the base and
+the exponent. Any underlying integer primitive can be used to store the number. Arithmetic can
+be performed on these numbers, and they can be converted to different scale exponents.
+
+# Why?
+
+A classic example: let's sum 10 cents and 20 cents using floating-point. We expect a result of
+30 cents.
+
+```should_panic
+assert_eq!(0.30, 0.10 + 0.20);
+```
+
+Wrong! We get an extra forty quintillionths of a dollar.
+
+```text
+assertion failed: `(left == right)` (left: `0.3`, right: `0.30000000000000004`)'
+```
+
+This is due to neither 0.1 nor 0.2 being exactly representable in base-2, just as a third can't
+be represented exactly in base-10. With `Fix`, we can choose the precision we want in base-10,
+at compile-time. In this case, hundredths of a dollar will do.
+
+```
+use typenum::U7;
+use uctl::si::Centi; // Fix<_, U10, N2>
+
+assert_eq!(Centi::<U7>::new(0_30), Centi::new(0_10) + Centi::new(0_20));
+```
+
+But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
+slower than bit-shifting, but that's only needed when _moving_ the point. With `Fix`, this is
+only done explicitly with the `convert` method.
+
+```
+use typenum::U9;
+use uctl::si::{Centi, Milli};
+
+assert_eq!(Milli::<U9>::new(0_300), Centi::new(0_30).convert());
+```
+
+We can also choose a base-2 scale just as easily.
+
+```
+use typenum::U20;
+use uctl::iec::{Kibi, Mebi};
+
+assert_eq!(Kibi::<U20>::new(1024), Mebi::new(1).convert());
+```
+
+It's also worth noting that the type-level scale changes when multiplying and dividing,
+avoiding any implicit conversion.
+
+```
+use typenum::U5;
+use uctl::iec::{Gibi, Kibi, Mebi};
+
+assert_eq!(Mebi::<U5>::new(3), Gibi::new(6) / Kibi::new(2));
+```
+
+# `no_std`
+
+This crate is `no_std`.
+
+# `i128` support
+
+Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` Cargo feature.
+
+ */
+
+mod bits_type;
 mod from_number;
 mod from_unsigned;
 mod unsigned_pow;
 mod operators;
+mod aliases;
 
-pub use self::aliases::*;
+pub use self::bits_type::BitsType;
 pub use self::from_unsigned::FromUnsigned;
 pub use self::unsigned_pow::UnsignedPow as Pow;
+pub use self::aliases::*;
 
 use core::{
     fmt::{Debug, Error, Formatter},
@@ -117,24 +130,33 @@ use typenum::{
 /// - _(x B<sup>E</sup>) ÷ y = (x ÷ y) B<sup>E</sup>_
 /// - _(x B<sup>E</sup>) % y = (x % y) B<sup>E</sup>_
 #[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Fix<Bits, Base, Exp> {
+#[repr(transparent)]
+pub struct Fix<Bits, Base, Exp>
+where
+    Bits: BitsType,
+{
     /// The underlying integer.
-    pub bits: Bits,
+    pub bits: Bits::Type,
 
     marker: PhantomData<(Base, Exp)>,
 }
 
-impl<Bits, Base, Exp> Fix<Bits, Base, Exp> {
+impl<Bits, Base, Exp> Fix<Bits, Base, Exp>
+where
+    Bits: BitsType,
+{
     /// Creates a number.
     ///
     /// # Examples
     ///
     /// ```
+    /// use typenum::P7;
     /// use uctl::si::{Kilo, Milli};
-    /// Milli::new(25); // 0.025
-    /// Kilo::new(25); // 25 000
+    ///
+    /// Milli::<P7>::new(25); // 0.025
+    /// Kilo::<P7>::new(25); // 25 000
     /// ```
-    pub fn new(bits: Bits) -> Self {
+    pub fn new(bits: Bits::Type) -> Self {
         Fix { bits, marker: PhantomData }
     }
 
@@ -143,21 +165,24 @@ impl<Bits, Base, Exp> Fix<Bits, Base, Exp> {
     /// # Examples
     ///
     /// ```
+    /// use typenum::U20;
     /// use uctl::si::{Kilo, Milli};
-    /// let kilo = Kilo::new(5);
-    /// let milli = Milli::new(5_000_000);
+    ///
+    /// let kilo = Kilo::<U20>::new(5);
+    /// let milli = Milli::<U20>::new(5_000_000);
+    ///
     /// assert_eq!(kilo, milli.convert());
     /// assert_eq!(milli, kilo.convert());
     /// ```
     pub fn convert<ToExp>(self) -> Fix<Bits, Base, ToExp>
     where
-        Bits: FromUnsigned + Pow + Mul<Output = Bits> + Div<Output = Bits>,
+        Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
         Exp: Sub<ToExp>,
         Diff<Exp, ToExp>: Abs + IsLess<Z0>,
         AbsVal<Diff<Exp, ToExp>>: Integer
     {
-        let base = Bits::from_unsigned::<Base>();
+        let base = Bits::Type::from_unsigned::<Base>();
         let diff = AbsVal::<Diff<Exp, ToExp>>::to_i32();
         let inverse = Le::<Diff<Exp, ToExp>, Z0>::to_bool();
 
@@ -176,7 +201,12 @@ impl<Bits, Base, Exp> Fix<Bits, Base, Exp> {
 // The usual traits.
 
 impl<Bits, Base, Exp> Debug for Fix<Bits, Base, Exp>
-where Bits: Debug, Base: Unsigned, Exp: Integer {
+where
+    Bits: BitsType,
+    Bits::Type: Debug,
+    Base: Unsigned,
+    Exp: Integer
+{
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "{:?}x{}^{}", self.bits, Base::to_u64(), Exp::to_i64())
     }

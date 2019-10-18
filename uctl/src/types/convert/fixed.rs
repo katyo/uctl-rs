@@ -1,47 +1,39 @@
 use core::mem::size_of;
 use super::{FromOther};
-use crate::{Fix, Unsigned, FromUnsigned, Div, Sub, Mul, Pow};
+use crate::{Fix, Unsigned, FromUnsigned, BitsType, Div, Sub, Mul, Pow};
 use typenum::{IsLess, Abs, AbsVal, Integer, Z0, Diff};
 
-macro_rules! from_real {
-    ($BITS: ty) => {
-        impl<Base, Exp> FromOther<f64> for Fix<$BITS, Base, Exp>
-        where Base: Unsigned,
-              Z0: IsLess<Exp>,
-              Exp: Abs,
-              AbsVal<Exp>: Integer,
-        {
-            fn from_other(value: f64) -> Self {
-                Self::from(value)
-            }
-        }
-    };
+impl<Bits, Base, Exp> FromOther<f64> for Fix<Bits, Base, Exp>
+where
+    f64: FromOther<Bits::Type>,
+    Bits: BitsType,
+    Bits::Type: FromUnsigned + Pow + FromOther<f64> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
+    Base: Unsigned,
+    Z0: IsLess<Exp>,
+    Exp: Abs,
+    AbsVal<Exp>: Integer,
+{
+    fn from_other(value: f64) -> Self {
+        Self::from(value)
+    }
 }
-
-from_real!(u8);
-from_real!(u16);
-from_real!(u32);
-from_real!(u64);
-
-from_real!(i8);
-from_real!(i16);
-from_real!(i32);
-from_real!(i64);
 
 impl<Bits, ToBits, Base, Exp, ToExp> FromOther<Fix<Bits, Base, Exp>> for Fix<ToBits, Base, ToExp>
 where
-    Bits: FromUnsigned + Pow + Mul<Output = Bits> + Div<Output = Bits>,
-    ToBits: FromUnsigned + Pow + Mul<Output = ToBits> + Div<Output = ToBits> + FromOther<Bits>,
+    Bits: BitsType,
+    Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
+    ToBits: BitsType,
+    ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + FromOther<Bits::Type>,
     Base: Unsigned,
     Exp: Sub<ToExp>,
     Diff<Exp, ToExp>: Abs + IsLess<Z0>,
     AbsVal<Diff<Exp, ToExp>>: Integer
 {
     fn from_other(value: Fix<Bits, Base, Exp>) -> Self {
-        if size_of::<ToBits>() > size_of::<Bits>() {
-            Fix::<ToBits, Base, Exp>::new(ToBits::from_other(value.bits)).convert()
+        if size_of::<ToBits::Type>() > size_of::<Bits::Type>() {
+            Fix::<ToBits, Base, Exp>::new(ToBits::Type::from_other(value.bits)).convert()
         } else {
-            Fix::new(ToBits::from_other(value.convert().bits))
+            Fix::new(ToBits::Type::from_other(value.convert().bits))
         }
     }
 }
