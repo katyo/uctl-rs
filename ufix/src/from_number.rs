@@ -1,19 +1,14 @@
-use typenum::{
-    Z0,
-    Bit, Integer, Unsigned,
-    AbsVal, Le, Abs, IsLess,
-};
-
-use crate::{FromOther, Mul, Div};
-use super::{Fix, FromUnsigned, BitsType, Pow};
+use core::ops::{Mul, Div};
+use typenum::{Z0, Bit, Integer, Unsigned, AbsVal, Le, Abs, IsLess};
+use super::{FromUnsigned, BitsType, Pow, Fix, Cast};
 
 macro_rules! from_num {
     ($TYPE: ty, $KIND: tt) => {
         impl<Bits, Base, Exp> From<$TYPE> for Fix<Bits, Base, Exp>
         where
-            $TYPE: FromOther<Bits::Type>,
+            $TYPE: Cast<Bits::Type>,
             Bits: BitsType,
-            Bits::Type: FromUnsigned + Pow + FromOther<$TYPE> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
+            Bits::Type: FromUnsigned + Pow + Cast<$TYPE> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
             Base: Unsigned,
             Z0: IsLess<Exp>,
             Exp: Abs,
@@ -40,11 +35,11 @@ macro_rules! from_num {
     };
 
     (@float, $OP: tt, $TYPE: ty, $BITS: ty, $value: ident, $ratio: ident) => {
-        <$BITS>::from_other($value $OP <$TYPE>::from_other($ratio))
+        <$BITS>::cast($value $OP <$TYPE>::cast($ratio))
     };
 
     (@int, $OP: tt, $TYPE: ty, $BITS: ty, $value: ident, $ratio: ident) => {
-        <$BITS>::from_other($value) $OP $ratio
+        <$BITS>::cast($value) $OP $ratio
     };
 }
 
@@ -105,7 +100,7 @@ mod test {
 
     #[test]
     fn from_f64() {
-        let a = Milli::<P32>::from(0.1f32);
+        let a = Milli::<P32>::from(0.1f64);
         assert_eq!(a, Milli::new(0_100));
 
         let a = Milli::<P16>::from(-0.5f64);

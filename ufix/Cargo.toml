@@ -1,13 +1,13 @@
 [package]
-name = "uctl"
+name = "ufix"
 version = "0.1.0"
 authors = ["K. <kayo@illumium.org>"]
-description = "Generic control library for low-end hardware"
+description = "Flexible and usable generic fixed-point numeric type"
 edition = "2018"
 repository = "https://github.com/katyo/uembedded"
 license = "MIT"
 readme = "README.md"
-keywords = ["fixed-point", "filter", "regulator", "control", "embedded"]
+keywords = ["fixed-point", "number", "typenum", "embedded", "no-std"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
 [badges]
@@ -16,13 +16,10 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 typenum = "1"
-generic-array = "0.13"
-
-[dependencies.ufix]
-version = "0.1"
-path = "../ufix"
 
 [features]
 default = []
-no_std = ["typenum/no_std", "ufix/no_std"]
-i128 = ["typenum/i128", "ufix/i128"]
+no_std = ["typenum/no_std"]
+i128 = ["typenum/i128"]
+word8 = []
+word16 = []

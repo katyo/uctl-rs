@@ -1,4 +1,4 @@
-use super::{IsDelayLine};
+use super::DelayLine;
 
 /// Delay line to use as internal storage for filters
 #[derive(Debug, Default)]

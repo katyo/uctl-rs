@@ -8,7 +8,12 @@ See also [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter) article.
 
  */
 
-use crate::{FromOther, Transducer, PhantomData, Mul, Add, Sub, Div};
+use core::{
+    marker::PhantomData,
+    ops::{Add, Sub, Mul, Div},
+};
+use ufix::Cast;
+use crate::{Transducer};
 
 /// LQE filter parameters
 #[derive(Debug, Clone, Copy)]

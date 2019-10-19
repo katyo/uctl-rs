@@ -1,4 +1,4 @@
-use crate::{PhantomData};
+use core::marker::PhantomData;
 
 /// Transducer trait
 ///

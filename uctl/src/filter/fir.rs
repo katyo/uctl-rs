@@ -8,8 +8,14 @@ See wiki article [FIR](https://en.wikipedia.org/wiki/Finite_impulse_response).
 
 */
 
-use crate::{DelayLine, GenericArray, ArrayLength, NonZero, Unsigned, Mul, Add, Add1, B1, FromOther, PhantomData, Transducer};
-use typenum::{Prod};
+use core::{
+    marker::PhantomData,
+    ops::{Add, Mul},
+};
+use typenum::{NonZero, Unsigned, Add1, Prod, B1};
+use generic_array::{GenericArray, ArrayLength};
+use ufix::Cast;
+use crate::{DelayLine, Transducer};
 
 /// FIR filter parameters
 ///
@@ -34,7 +40,7 @@ pub struct Filter<O, B, L>(PhantomData<(O, B, L)>);
 
 impl<O, B, L> Transducer for Filter<O, B, L>
 where B: Copy + Mul<L::Value>,
-      O: FromOther<Prod<B, L::Value>> + Add<O, Output = O>,
+      O: Cast<Prod<B, L::Value>> + Add<O, Output = O>,
       L: DelayLine,
       for<'a> &'a L: IntoIterator<Item = L::Value>,
       L::Length: Add<B1>,
@@ -48,8 +54,8 @@ where B: Copy + Mul<L::Value>,
     fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output {
         let result = param.iter().skip(1)
             .zip(state.iter())
-            .fold(O::from_other(param[0] * value),
-                  |accum, (b, x)| accum + O::from_other(*b * x));
+            .fold(O::cast(param[0] * value),
+                  |accum, (b, x)| accum + O::cast(*b * x));
 
         state.push(value);
         result
@@ -58,8 +64,9 @@ where B: Copy + Mul<L::Value>,
 
 #[cfg(test)]
 mod test {
-    use crate::{pfdl::Store as DL, U3, si};
-    use typenum::{P16, P32};
+    use crate::{pfdl::Store as DL};
+    use typenum::{P16, P32, U3};
+    use ufix::si;
     use super::*;
 
     #[test]

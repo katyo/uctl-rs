@@ -6,8 +6,13 @@ This module implements delay line which pre-initialized with some value.
 
 */
 
-use crate::{NonZero, GenericArray, ArrayLength, IntoIterator, FromIterator, usize, repeat};
-use super::{DelayLine};
+use core::{
+    usize,
+    iter::{IntoIterator, FromIterator, repeat},
+};
+use typenum::NonZero;
+use generic_array::{GenericArray, ArrayLength};
+use super::DelayLine;
 
 /// Simple pre-filled delay line
 #[derive(Debug, Default)]
@@ -125,7 +130,7 @@ where T: Copy,
 
 #[cfg(test)]
 mod test {
-    use crate::{U1, U3};
+    use typenum::{U1, U3};
     use super::*;
 
     #[test]

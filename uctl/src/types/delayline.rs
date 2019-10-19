@@ -1,6 +1,6 @@
 pub mod pfdl;
 
-use crate::{Unsigned, NonZero};
+use typenum::{Unsigned, NonZero};
 
 /// Delay line to use as internal storage for filters
 pub trait DelayLine

@@ -1,8 +1,6 @@
-use super::{Fix, BitsType, FromUnsigned, Pow};
-
-use crate::{FromOther};
 use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign, Add, Div, Mul, Neg, Rem, Sub};
 use typenum::{Diff, Sum, IsLess, Min, Max, Minimum, Maximum, Unsigned, Integer, Abs, AbsVal, Z0};
+use super::{Fix, BitsType, FromUnsigned, Pow, Cast};
 
 // Arithmetic.
 
@@ -31,7 +29,7 @@ where
 
     Maximum<LBits, RBits>: BitsType,
     <Maximum<LBits, RBits> as BitsType>::Type: FromUnsigned + Pow +
-        FromOther<LBits::Type> + FromOther<RBits::Type> +
+        Cast<LBits::Type> + Cast<RBits::Type> +
         Mul<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
         Div<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
         Add<Output = <Maximum<LBits, RBits> as BitsType>::Type>,
@@ -68,7 +66,7 @@ where
 
     Maximum<LBits, RBits>: BitsType,
     <Maximum<LBits, RBits> as BitsType>::Type: FromUnsigned + Pow +
-        FromOther<LBits::Type> + FromOther<RBits::Type> +
+        Cast<LBits::Type> + Cast<RBits::Type> +
         Mul<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
         Div<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
         Sub<Output = <Maximum<LBits, RBits> as BitsType>::Type>,
@@ -100,14 +98,14 @@ where
     LBits: BitsType + Add<RBits>,
     RBits: BitsType,
     Sum<LBits, RBits>: BitsType,
-    <Sum<LBits, RBits> as BitsType>::Type: FromOther<LBits::Type> + FromOther<RBits::Type> +
+    <Sum<LBits, RBits> as BitsType>::Type: Cast<LBits::Type> + Cast<RBits::Type> +
       Mul<Output = <Sum<LBits, RBits> as BitsType>::Type>,
     LExp: Add<RExp>,
 {
     type Output = Fix<Sum<LBits, RBits>, Base, Sum<LExp, RExp>>;
     fn mul(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(<Sum<LBits, RBits> as BitsType>::Type::from_other(self.bits) *
-                          <Sum<LBits, RBits> as BitsType>::Type::from_other(rhs.bits))
+        Self::Output::new(<Sum<LBits, RBits> as BitsType>::Type::cast(self.bits) *
+                          <Sum<LBits, RBits> as BitsType>::Type::cast(rhs.bits))
     }
 }
 
@@ -120,15 +118,15 @@ where
     LBits: BitsType + Sub<RBits>,
     RBits: BitsType,
     Diff<LBits, RBits>: BitsType,
-    LBits::Type: FromOther<RBits::Type> + Div<Output = LBits::Type>,
+    LBits::Type: Cast<RBits::Type> + Div<Output = LBits::Type>,
     LExp: Sub<RExp>,
-    <Diff<LBits, RBits> as BitsType>::Type: FromOther<LBits::Type>,
+    <Diff<LBits, RBits> as BitsType>::Type: Cast<LBits::Type>,
 {
     type Output = Fix<Diff<LBits, RBits>, Base, Diff<LExp, RExp>>;
     fn div(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
         Self::Output::new(
-            <Diff<LBits, RBits> as BitsType>::Type::from_other(
-                self.bits / LBits::Type::from_other(rhs.bits)))
+            <Diff<LBits, RBits> as BitsType>::Type::cast(
+                self.bits / LBits::Type::cast(rhs.bits)))
     }
 }
 

@@ -33,7 +33,7 @@ at compile-time. In this case, hundredths of a dollar will do.
 
 ```
 use typenum::U7;
-use uctl::si::Centi; // Fix<_, U10, N2>
+use ufix::si::Centi; // Fix<_, U10, N2>
 
 assert_eq!(Centi::<U7>::new(0_30), Centi::<U7>::new(0_10) + Centi::<U7>::new(0_20));
 ```
@@ -44,7 +44,7 @@ only done explicitly with the `convert` method.
 
 ```
 use typenum::U9;
-use uctl::si::{Centi, Milli};
+use ufix::si::{Centi, Milli};
 
 assert_eq!(Milli::<U9>::new(0_300), Centi::<U9>::new(0_30).convert());
 ```
@@ -53,7 +53,7 @@ We can also choose a base-2 scale just as easily.
 
 ```
 use typenum::U20;
-use uctl::iec::{Kibi, Mebi};
+use ufix::iec::{Kibi, Mebi};
 
 assert_eq!(Kibi::<U20>::new(1024), Mebi::<U20>::new(1).convert());
 ```
@@ -63,7 +63,7 @@ avoiding any implicit conversion.
 
 ```
 use typenum::{U2, U4};
-use uctl::iec::{Gibi, Kibi, Mebi};
+use ufix::iec::{Gibi, Kibi, Mebi};
 
 assert_eq!(Mebi::<U2>::new(3), Gibi::<U4>::new(6) / Kibi::<U2>::new(2));
 ```
@@ -78,59 +78,49 @@ Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` 
 
  */
 
-mod bits_type;
-mod from_number;
-mod from_unsigned;
-mod unsigned_pow;
-mod operators;
-mod aliases;
-
-pub use self::bits_type::BitsType;
-pub use self::from_unsigned::FromUnsigned;
-pub use self::unsigned_pow::UnsignedPow as Pow;
-pub use self::aliases::*;
-
 use core::{
-    fmt::{Debug, Error, Formatter},
     marker::PhantomData,
     ops::{Div, Mul, Sub},
 };
+use typenum::{Z0, Bit, Integer, Unsigned, AbsVal, Diff, Le, Abs, IsLess};
+use super::{BitsType, FromUnsigned, Pow, Cast};
 
-use typenum::{
-    Z0,
-    Bit, Integer, Unsigned,
-    AbsVal, Diff, Le, Abs, IsLess,
-};
+/**
 
-use super::{FromOther};
+Fixed-point number representing _2 <sup>`Bits`</sup> × `Base` <sup>`Exp`</sup>_.
 
-/// Fixed-point number representing _Bits × Base <sup>Exp</sup>_.
-///
-/// - `Bits` is an integer primitive type, or any type which can be created from a type-level
-///   integer and exponentiated.
-/// - `Base` is an [`Unsigned`] type-level integer.
-/// - `Exp` is a signed type-level [`Integer`].
-///
-/// [`Unsigned`]: ../typenum/marker_traits/trait.Unsigned.html
-/// [`Integer`]: ../typenum/marker_traits/trait.Integer.html
-///
-/// # Summary of operations
-///
-/// Lower case variables represent values of _Bits_. Upper case _B_ and _E_ represent type-level
-/// integers _Base_ and _Exp_, respectively.
-///
-/// - _−(x B<sup>E</sup>) = (−x) B<sup>E</sup>_
-/// - _(x B<sup>E</sup>) + (y B<sup>E</sup>) = (x + y) B<sup>E</sup>_
-/// - _(x B<sup>E</sup>) − (y B<sup>E</sup>) = (x − y) B<sup>E</sup>_
-/// - _(x B<sup>E<sub>x</sub></sup>) × (y B<sup>E<sub>y</sub></sup>) =
-///   (x × y) B<sup>E<sub>x</sub> + E<sub>y</sub></sup>_
-/// - _(x B<sup>E<sub>x</sub></sup>) ÷ (y B<sup>E<sub>y</sub></sup>) =
-///   (x ÷ y) B<sup>E<sub>x</sub> − E<sub>y</sub></sup>_
-/// - _(x B<sup>E<sub>x</sub></sup>) % (y B<sup>E<sub>y</sub></sup>) =
-///   (x % y) B<sup>E<sub>x</sub></sup>_
-/// - _(x B<sup>E</sup>) × y = (x × y) B<sup>E</sup>_
-/// - _(x B<sup>E</sup>) ÷ y = (x ÷ y) B<sup>E</sup>_
-/// - _(x B<sup>E</sup>) % y = (x % y) B<sup>E</sup>_
+- `Bits` is a type-level integer which represent width of mantissa in bits.
+  * [`Unsigned`] (`U*`) number means unsigned type.
+  * [`Integer`] (`P*`) number means signed type.
+- `Base` is an [`Unsigned`] type-level integer.
+- `Exp` is a signed type-level [`Integer`].
+
+[`Unsigned`]: ../typenum/marker_traits/trait.Unsigned.html
+[`Integer`]: ../typenum/marker_traits/trait.Integer.html
+
+# Summary of operations
+
+Lower case variables represent values of mantissa. Upper case _M_, _B_ and _E_ represent type-level
+integers _Bits_, _Base_ and _Exp_, respectively.
+
+- _−(x B<sup>E</sup>) = (−x) B<sup>E</sup>_
+
+- _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) + (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
+   (x + y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
+
+- _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) - (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
+   (x - y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
+
+- _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) × (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
+   (x × y)<sub>M<sub>x</sub> + M<sub>y</sub></sub> B<sup>E<sub>x</sub> + E<sub>y</sub></sup>_
+
+- _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) ÷ (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
+  (x ÷ y)<sub>M<sub>x</sub> - M<sub>y</sub></sub> B<sup>E<sub>x</sub> − E<sub>y</sub></sup>_
+
+- _(x B<sup>E<sub>x</sub></sup>) % (y B<sup>E<sub>y</sub></sup>) =
+  (x % y) B<sup>E<sub>x</sub></sup>_
+
+ */
 #[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct Fix<Bits, Base, Exp>
@@ -153,7 +143,7 @@ where
     ///
     /// ```
     /// use typenum::P7;
-    /// use uctl::si::{Kilo, Milli};
+    /// use ufix::si::{Kilo, Milli};
     ///
     /// Milli::<P7>::new(25); // 0.025
     /// Kilo::<P7>::new(25); // 25 000
@@ -190,9 +180,9 @@ where
     fn to_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
     where
         ToBits: BitsType,
-        ToBits::Type: FromOther<Bits::Type>,
+        ToBits::Type: Cast<Bits::Type>,
     {
-        Fix::new(ToBits::Type::from_other(self.bits))
+        Fix::new(ToBits::Type::cast(self.bits))
     }
 
     /// Converts to another _Bits_ and/or _Exp_.
@@ -201,7 +191,7 @@ where
     ///
     /// ```
     /// use typenum::U20;
-    /// use uctl::si::{Kilo, Milli};
+    /// use ufix::si::{Kilo, Milli};
     ///
     /// let kilo = Kilo::<U20>::new(5);
     /// let milli = Milli::<U20>::new(5_000_000);
@@ -215,7 +205,7 @@ where
         Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
         ToBits: BitsType,
-        ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + FromOther<Bits::Type>,
+        ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + Cast<Bits::Type>,
         Exp: Sub<ToExp>,
         Diff<Exp, ToExp>: Abs + IsLess<Z0>,
         AbsVal<Diff<Exp, ToExp>>: Integer
@@ -225,19 +215,5 @@ where
         } else {
             self.to_exp::<ToExp>().to_bits()
         }
-    }
-}
-
-// The usual traits.
-
-impl<Bits, Base, Exp> Debug for Fix<Bits, Base, Exp>
-where
-    Bits: BitsType,
-    Bits::Type: Debug,
-    Base: Unsigned,
-    Exp: Integer
-{
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "{:?}x{}^{}", self.bits, Base::to_u64(), Exp::to_i64())
     }
 }
