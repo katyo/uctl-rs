@@ -4,14 +4,14 @@ version = "0.1.0"
 authors = ["K. <kayo@illumium.org>"]
 description = "Flexible and usable generic fixed-point numeric type"
 edition = "2018"
-repository = "https://github.com/katyo/uembedded"
+repository = "https://github.com/katyo/ucontrol"
 license = "MIT"
 readme = "README.md"
 keywords = ["fixed-point", "number", "typenum", "embedded", "no-std"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
 [badges]
-travis-ci = { repoitory = "katyo/uembedded" }
+travis-ci = { repoitory = "katyo/ucontrol" }
 maintenance = { status = "experimental" }
 
 [dependencies]

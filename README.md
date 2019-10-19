@@ -1,7 +1,7 @@
 # Generic control library for low-end hadrware
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Travis-CI Build Status](https://travis-ci.org/katyo/uctl.svg?branch=master)](https://travis-ci.org/katyo/uctl)
+[![Travis-CI Build Status](https://travis-ci.org/katyo/ucontrol.svg?branch=master)](https://travis-ci.org/katyo/ucontrol)
 [![Crates.io Package](https://img.shields.io/crates/v/uctl.svg?style=popout)](https://crates.io/crates/uctl)
 [![Docs.rs API Documentation](https://docs.rs/uctl/badge.svg)](https://docs.rs/uctl)
 
@@ -30,5 +30,7 @@ Also it has well known problems with precision loss on division.
 
 ## Links
 
+* [ufix crate](https://crates.io/crates/ufix)
+* [ufix API](https://docs.rs/ufix)
 * [uctl crate](https://crates.io/crates/uctl)
 * [uctl API](https://docs.rs/uctl)

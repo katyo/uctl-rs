@@ -4,14 +4,14 @@ version = "0.1.0"
 authors = ["K. <kayo@illumium.org>"]
 description = "Generic control library for low-end hardware"
 edition = "2018"
-repository = "https://github.com/katyo/uembedded"
+repository = "https://github.com/katyo/ucontrol"
 license = "MIT"
 readme = "README.md"
 keywords = ["fixed-point", "filter", "regulator", "control", "embedded"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
 [badges]
-travis-ci = { repoitory = "katyo/uembedded" }
+travis-ci = { repoitory = "katyo/ucontrol" }
 maintenance = { status = "experimental" }
 
 [dependencies]
