@@ -2,55 +2,55 @@ use super::Fix;
 
 /// Base-2 types.
 pub mod bin {
-    use typenum::U2;
+    use typenum::*;
     use super::Fix as Fix_;
 
     pub type Fix<Bits, Exp> = Fix_<Bits, U2, Exp>;
 
-    pub type UFix8<Exp> = Fix<u8, Exp>;
-    pub type UFix16<Exp> = Fix<u16, Exp>;
-    pub type UFix32<Exp> = Fix<u32, Exp>;
-    pub type UFix64<Exp> = Fix<u64, Exp>;
-    pub type UFixSize<Exp> = Fix<usize, Exp>;
+    pub type UFix8<Exp> = Fix<U8, Exp>;
+    pub type UFix16<Exp> = Fix<U16, Exp>;
+    pub type UFix32<Exp> = Fix<U32, Exp>;
+    pub type UFix64<Exp> = Fix<U64, Exp>;
+    //pub type UFixSize<Exp> = Fix<usize, Exp>;
 
     #[cfg(feature = "i128")]
-    pub type UFix128<Exp> = Fix<u128, Exp>;
+    pub type UFix128<Exp> = Fix<U128, Exp>;
 
-    pub type IFix8<Exp> = Fix<i8, Exp>;
-    pub type IFix16<Exp> = Fix<i16, Exp>;
-    pub type IFix32<Exp> = Fix<i32, Exp>;
-    pub type IFix64<Exp> = Fix<i64, Exp>;
-    pub type IFixSize<Exp> = Fix<isize, Exp>;
+    pub type IFix8<Exp> = Fix<P8, Exp>;
+    pub type IFix16<Exp> = Fix<P16, Exp>;
+    pub type IFix32<Exp> = Fix<P32, Exp>;
+    pub type IFix64<Exp> = Fix<P64, Exp>;
+    //pub type IFixSize<Exp> = Fix<isize, Exp>;
 
     #[cfg(feature = "i128")]
-    pub type IFix128<Exp> = Fix<i128, Exp>;
+    pub type IFix128<Exp> = Fix<P128, Exp>;
 }
 
 /// Base-10 types.
 pub mod dec {
-    use typenum::U10;
+    use typenum::*;
 
     use super::Fix as Fix_;
 
     pub type Fix<Bits, Exp> = Fix_<Bits, U10, Exp>;
 
-    pub type UFix8<Exp> = Fix<u8, Exp>;
-    pub type UFix16<Exp> = Fix<u16, Exp>;
-    pub type UFix32<Exp> = Fix<u32, Exp>;
-    pub type UFix64<Exp> = Fix<u64, Exp>;
-    pub type UFixSize<Exp> = Fix<usize, Exp>;
+    pub type UFix8<Exp> = Fix<U8, Exp>;
+    pub type UFix16<Exp> = Fix<U16, Exp>;
+    pub type UFix32<Exp> = Fix<U32, Exp>;
+    pub type UFix64<Exp> = Fix<U64, Exp>;
+    //pub type UFixSize<Exp> = Fix<usize, Exp>;
 
     #[cfg(feature = "i128")]
-    pub type UFix128<Exp> = Fix<u128, Exp>;
+    pub type UFix128<Exp> = Fix<U128, Exp>;
 
-    pub type IFix8<Exp> = Fix<i8, Exp>;
-    pub type IFix16<Exp> = Fix<i16, Exp>;
-    pub type IFix32<Exp> = Fix<i32, Exp>;
-    pub type IFix64<Exp> = Fix<i64, Exp>;
-    pub type IFixSize<Exp> = Fix<isize, Exp>;
+    pub type IFix8<Exp> = Fix<P8, Exp>;
+    pub type IFix16<Exp> = Fix<P16, Exp>;
+    pub type IFix32<Exp> = Fix<P32, Exp>;
+    pub type IFix64<Exp> = Fix<P64, Exp>;
+    //pub type IFixSize<Exp> = Fix<isize, Exp>;
 
     #[cfg(feature = "i128")]
-    pub type IFix128<Exp> = Fix<i128, Exp>;
+    pub type IFix128<Exp> = Fix<P128, Exp>;
 }
 
 /// SI prefixes.
@@ -93,7 +93,6 @@ pub mod iec {
         P10, P20, P30, P40, P50, P60, P70, P80,
         Z0,
     };
-
     use super::bin::Fix;
 
     /** 2<sup>0</sup> */ pub type Unit<Bits> = Fix<Bits, Z0>;

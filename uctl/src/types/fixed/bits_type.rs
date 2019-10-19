@@ -2,6 +2,7 @@ pub trait BitsType {
     type Type;
 }
 
+/*
 macro_rules! type_type {
     ($type: tt) => {
         impl super::BitsType for $type {
@@ -25,6 +26,7 @@ type_type!(i64);
 #[cfg(feature = "i128")]
 type_type!(i128);
 type_type!(isize);
+*/
 
 macro_rules! bits_type {
     ($bits: tt, $type: tt) => {

@@ -68,46 +68,47 @@ from_num!(f64, float);
 #[cfg(test)]
 mod test {
     use crate::si::Milli;
+    use typenum::*;
 
     #[test]
     fn from_u16() {
-        let a = Milli::<i16>::from(9u16);
+        let a = Milli::<P16>::from(9u16);
         assert_eq!(a, Milli::new(9_000));
     }
 
     #[test]
     fn from_i16() {
-        let a = Milli::<i16>::from(-11i16);
+        let a = Milli::<P16>::from(-11i16);
         assert_eq!(a, Milli::new(-11_000));
     }
 
     #[test]
     fn from_u32() {
-        let a = Milli::<i32>::from(9u32);
+        let a = Milli::<P32>::from(9u32);
         assert_eq!(a, Milli::new(9_000));
     }
 
     #[test]
     fn from_i32() {
-        let a = Milli::<i16>::from(-11i32);
+        let a = Milli::<P16>::from(-11i32);
         assert_eq!(a, Milli::new(-11_000));
     }
 
     #[test]
     fn from_f32() {
-        let a = Milli::<i32>::from(0.1f32);
+        let a = Milli::<P32>::from(0.1f32);
         assert_eq!(a, Milli::new(0_100));
 
-        let a = Milli::<i16>::from(-0.5f32);
+        let a = Milli::<P16>::from(-0.5f32);
         assert_eq!(a, -Milli::new(0_500));
     }
 
     #[test]
     fn from_f64() {
-        let a = Milli::<i32>::from(0.1f32);
+        let a = Milli::<P32>::from(0.1f32);
         assert_eq!(a, Milli::new(0_100));
 
-        let a = Milli::<i16>::from(-0.5f64);
+        let a = Milli::<P16>::from(-0.5f64);
         assert_eq!(a, -Milli::new(0_500));
     }
 }

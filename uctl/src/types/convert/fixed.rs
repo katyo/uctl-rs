@@ -1,4 +1,3 @@
-use core::mem::size_of;
 use super::{FromOther};
 use crate::{Fix, Unsigned, FromUnsigned, BitsType, Div, Sub, Mul, Pow};
 use typenum::{IsLess, Abs, AbsVal, Integer, Z0, Diff};
@@ -20,7 +19,7 @@ where
 
 impl<Bits, ToBits, Base, Exp, ToExp> FromOther<Fix<Bits, Base, Exp>> for Fix<ToBits, Base, ToExp>
 where
-    Bits: BitsType,
+    Bits: BitsType + IsLess<ToBits>,
     Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
     ToBits: BitsType,
     ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + FromOther<Bits::Type>,
@@ -30,11 +29,7 @@ where
     AbsVal<Diff<Exp, ToExp>>: Integer
 {
     fn from_other(value: Fix<Bits, Base, Exp>) -> Self {
-        if size_of::<ToBits::Type>() > size_of::<Bits::Type>() {
-            Fix::<ToBits, Base, Exp>::new(ToBits::Type::from_other(value.bits)).convert()
-        } else {
-            Fix::new(ToBits::Type::from_other(value.convert().bits))
-        }
+        value.convert()
     }
 }
 
@@ -51,7 +46,7 @@ mod test {
     fn mul() {
         let a = F32::from(123.456);
         let b = F32::from(78.9);
-        let c = F32::from_other(F64::from_other(a) * F64::from_other(b));
+        let c = F32::from_other(a * b);
 
         assert_eq!(c, F32::from(9740.67715));
     }
@@ -60,7 +55,7 @@ mod test {
     fn div() {
         let a = F32::from(6789.12);
         let b = F32::from(12.345);
-        let c = F32::from_other(F64D::from_other(a) / F64::from_other(b));
+        let c = F32::from_other(F64D::from_other(a) / b);
 
         assert_eq!(c, F32::from(549.9496));
     }

@@ -35,7 +35,7 @@ at compile-time. In this case, hundredths of a dollar will do.
 use typenum::U7;
 use uctl::si::Centi; // Fix<_, U10, N2>
 
-assert_eq!(Centi::<U7>::new(0_30), Centi::new(0_10) + Centi::new(0_20));
+assert_eq!(Centi::<U7>::new(0_30), Centi::<U7>::new(0_10) + Centi::<U7>::new(0_20));
 ```
 
 But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
@@ -46,7 +46,7 @@ only done explicitly with the `convert` method.
 use typenum::U9;
 use uctl::si::{Centi, Milli};
 
-assert_eq!(Milli::<U9>::new(0_300), Centi::new(0_30).convert());
+assert_eq!(Milli::<U9>::new(0_300), Centi::<U9>::new(0_30).convert());
 ```
 
 We can also choose a base-2 scale just as easily.
@@ -55,17 +55,17 @@ We can also choose a base-2 scale just as easily.
 use typenum::U20;
 use uctl::iec::{Kibi, Mebi};
 
-assert_eq!(Kibi::<U20>::new(1024), Mebi::new(1).convert());
+assert_eq!(Kibi::<U20>::new(1024), Mebi::<U20>::new(1).convert());
 ```
 
 It's also worth noting that the type-level scale changes when multiplying and dividing,
 avoiding any implicit conversion.
 
 ```
-use typenum::U5;
+use typenum::{U2, U4};
 use uctl::iec::{Gibi, Kibi, Mebi};
 
-assert_eq!(Mebi::<U5>::new(3), Gibi::new(6) / Kibi::new(2));
+assert_eq!(Mebi::<U2>::new(3), Gibi::<U4>::new(6) / Kibi::<U2>::new(2));
 ```
 
 # `no_std`
@@ -101,6 +101,8 @@ use typenum::{
     Bit, Integer, Unsigned,
     AbsVal, Diff, Le, Abs, IsLess,
 };
+
+use super::{FromOther};
 
 /// Fixed-point number representing _Bits × Base <sup>Exp</sup>_.
 ///
@@ -161,20 +163,7 @@ where
     }
 
     /// Converts to another _Exp_.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use typenum::U20;
-    /// use uctl::si::{Kilo, Milli};
-    ///
-    /// let kilo = Kilo::<U20>::new(5);
-    /// let milli = Milli::<U20>::new(5_000_000);
-    ///
-    /// assert_eq!(kilo, milli.convert());
-    /// assert_eq!(milli, kilo.convert());
-    /// ```
-    pub fn convert<ToExp>(self) -> Fix<Bits, Base, ToExp>
+    fn to_exp<ToExp>(self) -> Fix<Bits, Base, ToExp>
     where
         Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
@@ -194,6 +183,47 @@ where
             Fix::new(self.bits / ratio)
         } else {
             Fix::new(self.bits * ratio)
+        }
+    }
+
+    /// Convert to another _Bits_.
+    fn to_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
+    where
+        ToBits: BitsType,
+        ToBits::Type: FromOther<Bits::Type>,
+    {
+        Fix::new(ToBits::Type::from_other(self.bits))
+    }
+
+    /// Converts to another _Bits_ and/or _Exp_.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use typenum::U20;
+    /// use uctl::si::{Kilo, Milli};
+    ///
+    /// let kilo = Kilo::<U20>::new(5);
+    /// let milli = Milli::<U20>::new(5_000_000);
+    ///
+    /// assert_eq!(kilo, milli.convert());
+    /// assert_eq!(milli, kilo.convert());
+    /// ```
+    pub fn convert<ToBits, ToExp>(self) -> Fix<ToBits, Base, ToExp>
+    where
+        Bits: IsLess<ToBits>,
+        Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
+        Base: Unsigned,
+        ToBits: BitsType,
+        ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + FromOther<Bits::Type>,
+        Exp: Sub<ToExp>,
+        Diff<Exp, ToExp>: Abs + IsLess<Z0>,
+        AbsVal<Diff<Exp, ToExp>>: Integer
+    {
+        if Le::<Bits, ToBits>::to_bool() {
+            self.to_bits::<ToBits>().to_exp()
+        } else {
+            self.to_exp::<ToExp>().to_bits()
         }
     }
 }

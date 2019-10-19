@@ -11,8 +11,13 @@ pub trait Transducer {
     /// Output values type
     type Output;
 
+    /// Params type
+    type Param;
+    /// State type
+    type State;
+
     /// Apply transformation to the input value and output result
-    fn apply(&self, value: Self::Input) -> Self::Output;
+    fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output;
 }
 
 macro_rules! transducer_tuple {
@@ -24,11 +29,13 @@ macro_rules! transducer_tuple {
         {
             type Input = $type0::Input;
             type Output = $rtype::Output;
+            type Param = ($type0::Param, $($typeN::Param),+);
+            type State = ($type0::State, $($typeN::State),+);
 
-            fn apply(&self, value: Self::Input) -> Self::Output {
-                let value = self.$field0.apply(value);
+            fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output {
+                let value = $type0::apply(&param.$field0, &mut state.$field0, value);
                 $(
-                    let value = self.$fieldN.apply(value);
+                    let value = $typeN::apply(&param.$fieldN, &mut state.$fieldN, value);
                 )+
                     value
             }
@@ -41,22 +48,32 @@ transducer_tuple!(C, A => 0, B: A => 1, C: B => 2);
 transducer_tuple!(D, A => 0, B: A => 1, C: B => 2, D: C => 3);
 transducer_tuple!(E, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4);
 
+/*
 #[derive(Debug, Clone, Copy)]
-#[repr(transparent)]
-pub struct FnTransducer<I, O, F>(F, PhantomData<(I, O)>);
-
-impl<I, O, F: Fn(I) -> O> From<F> for FnTransducer<I, O, F> {
-    fn from(f: F) -> Self {
-        Self(f, PhantomData)
-    }
-}
+pub struct FnTransducer<I, O, F>(PhantomData<(I, O, F)>);
 
 impl<I, O, F: Fn(I) -> O> Transducer for FnTransducer<I, O, F> {
     type Input = I;
     type Output = O;
+    type Param = F;
+    type State = ();
 
-    fn apply(&self, value: Self::Input) -> Self::Output {
-        self.0(value)
+    fn apply(param: &Self::Param, _state: &mut Self::State, value: Self::Input) -> Self::Output {
+        param(value)
+    }
+}
+ */
+
+pub struct FnTransducer<I, O>(PhantomData<(I, O)>);
+
+impl<I, O> Transducer for FnTransducer<I, O> {
+    type Input = I;
+    type Output = O;
+    type Param = fn(I) -> O;
+    type State = ();
+
+    fn apply(param: &Self::Param, _state: &mut Self::State, value: Self::Input) -> Self::Output {
+        param(value)
     }
 }
 
@@ -74,13 +91,15 @@ mod test {
 
     #[test]
     fn func() {
-        assert_eq!(FnTransducer::from(inc).apply(1), 2);
+        type C = FnTransducer<i8, i16>;
+
+        assert_eq!(C::apply(&(inc as fn(_) -> _), &mut (), 1), 2);
     }
 
     #[test]
     fn pipe2() {
-        let c = (FnTransducer::from(inc), FnTransducer::from(dbl));
+        type C = (FnTransducer<i8, i16>, FnTransducer<i16, i32>);
 
-        assert_eq!(c.apply(1), 4);
+        assert_eq!(C::apply(&(inc, dbl), &mut ((), ()), 1), 4);
     }
 }

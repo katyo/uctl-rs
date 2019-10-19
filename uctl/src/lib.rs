@@ -54,12 +54,12 @@ let a = F32::from(123.456);
 let b = F32::from(78.9);
 
 // The multiplication without overflow
-let c = F32::from_other(F64::from_other(a) * F64::from_other(b));
+let c = F32::from_other(a * b);
 
 assert_eq!(c, F32::from(9740.67715));
 
 // The division without precision loss
-let d = F32::from_other(F64D::from_other(c) / F64::from_other(b));
+let d = F32::from_other(F64D::from_other(c) / b);
 
 assert_eq!(d, F32::from(123.45599));
 ```
