@@ -47,22 +47,17 @@ transducer_tuple!(B, A => 0, B: A => 1);
 transducer_tuple!(C, A => 0, B: A => 1, C: B => 2);
 transducer_tuple!(D, A => 0, B: A => 1, C: B => 2, D: C => 3);
 transducer_tuple!(E, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4);
-
-/*
-#[derive(Debug, Clone, Copy)]
-pub struct FnTransducer<I, O, F>(PhantomData<(I, O, F)>);
-
-impl<I, O, F: Fn(I) -> O> Transducer for FnTransducer<I, O, F> {
-    type Input = I;
-    type Output = O;
-    type Param = F;
-    type State = ();
-
-    fn apply(param: &Self::Param, _state: &mut Self::State, value: Self::Input) -> Self::Output {
-        param(value)
-    }
-}
- */
+transducer_tuple!(F, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5);
+transducer_tuple!(G, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6);
+transducer_tuple!(H, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7);
+transducer_tuple!(I, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8);
+transducer_tuple!(J, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9);
+transducer_tuple!(K, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10);
+transducer_tuple!(L, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11);
+transducer_tuple!(M, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12);
+transducer_tuple!(N, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12, N: M => 13);
+transducer_tuple!(O, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12, N: M => 13, O: N => 14);
+transducer_tuple!(P, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12, N: M => 13, O: N => 14, P: O => 15);
 
 pub struct FnTransducer<I, O>(PhantomData<(I, O)>);
 

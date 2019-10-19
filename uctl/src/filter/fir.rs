@@ -2,9 +2,11 @@
 
 ## FIR filter
 
-This module implements generic Finite Impulse Response filter.
+This module implements **Finite Impulse Response** (FIR) filter.
 
-See wiki article [FIR](https://en.wikipedia.org/wiki/Finite_impulse_response).
+The parameters of filter can be found using different analytical methods and it's non-trivial.
+
+See also [Finite impulse response](https://en.wikipedia.org/wiki/Finite_impulse_response).
 
 */
 

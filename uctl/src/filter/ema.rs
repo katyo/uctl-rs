@@ -2,9 +2,18 @@
 
 ## EMA filter
 
-This module implements Exponential Moving Average filter.
+This module implements **Exponential Moving Average** filter.
 
 EMA is a simple and fast filter which does not require delay line but only single result of previous evaluation as a state.
+
+Filter formula: _y = α * x + (1 - α) * y[-1]_
+
+There are different ways of definition a filter parameters, such as:
+
+1. Using α factor
+2. Through number of smoothing steps
+3. Through smoothing time
+4. As an 1st-order transmission behavior
 
 See also [Exponential moving average](https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average).
 
@@ -145,21 +154,21 @@ where A: Copy + Cast<f64> + Sub<Output = A>,
 /**
 EMA filter state
 
-- `V` - filter input/output value type
+- `O` - filter output value type
 */
 #[derive(Debug, Clone, Copy, Default)]
-pub struct State<V> {
+pub struct State<O> {
     /// The last output value
-    last_value: V,
+    last_value: O,
 }
 
-impl<V> State<V> {
+impl<O> State<O> {
     /**
     Initialize filter state
 
     - `value`: The initial value
      */
-    pub fn new(value: V) -> Self {
+    pub fn new(value: O) -> Self {
         Self {
             last_value: value,
         }
@@ -170,24 +179,27 @@ impl<V> State<V> {
 EMA filter
 
 - `A` - filter weights type
-- `V` - filter input/output value type
+- `I` - filter input value type
+- `O` - filter output value type
  */
 #[derive(Debug)]
-pub struct Filter<A, V>(PhantomData<(A, V)>);
+pub struct Filter<A, I, O>(PhantomData<(A, I, O)>);
 
-impl<A, V> Transducer for Filter<A, V>
-where V: Copy + Cast<<A as Mul<V>>::Output> + Add<V, Output = V>,
-      A: Copy + Mul<V>,
+impl<A, I, O> Transducer for Filter<A, I, O>
+where O: Copy + Add<O> + Cast<Prod<A, I>> + Cast<Prod<A, O>> + Cast<Sum<O, O>>,
+      A: Copy + Mul<I> + Mul<O>,
 {
-    type Input = V;
-    type Output = V;
+    type Input = I;
+    type Output = O;
     type Param = Param<A>;
-    type State = State<V>;
+    type State = State<O>;
 
     fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output {
         // X = alpha * X + (1 - alpha) * X0
-        state.last_value = V::cast(param.alpha * value) +
-            V::cast(param.one_sub_alpha * state.last_value);
+        state.last_value = O::cast(
+            O::cast(param.alpha * value) +
+            O::cast(param.one_sub_alpha * state.last_value)
+        );
         state.last_value
     }
 }
@@ -199,7 +211,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn ewma_n_float() {
+    fn from_n_float() {
         let param = Param::<f32>::from_steps(2.0);
 
         assert_eq!(param.alpha, 0.6666667);
@@ -212,7 +224,7 @@ mod test {
     }
 
     #[test]
-    fn ewma_n_fix_32_64() {
+    fn from_n_fix_32_64() {
         // We use 64-bit types for multiplication and division to save precision and avoid overflows
         // But also we can use only 32-bit arithmetic with lower precision
         type A = Fix<P32, N18>;
@@ -230,7 +242,7 @@ mod test {
     }
 
     #[test]
-    fn ewma_n_fix_32_only() {
+    fn from_n_fix_32_only() {
         type A = Fix<P32, N18>;
         type V = Fix<P32, N13>;
 
