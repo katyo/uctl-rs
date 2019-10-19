@@ -1,3 +1,6 @@
+// Allow due to unexpected behavior on it
+#![allow(clippy::type_repetition_in_bounds)]
+
 use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign, Add, Div, Mul, Neg, Rem, Sub};
 use typenum::{Diff, Sum, IsLess, Min, Max, Minimum, Maximum, Unsigned, Integer, Abs, AbsVal, Z0};
 use super::{Fix, BitsType, FromUnsigned, Pow, Cast};

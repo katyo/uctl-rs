@@ -153,7 +153,7 @@ where
     }
 
     /// Converts to another _Exp_.
-    fn to_exp<ToExp>(self) -> Fix<Bits, Base, ToExp>
+    fn into_exp<ToExp>(self) -> Fix<Bits, Base, ToExp>
     where
         Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
@@ -177,7 +177,7 @@ where
     }
 
     /// Convert to another _Bits_.
-    fn to_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
+    fn into_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
     where
         ToBits: BitsType,
         ToBits::Type: Cast<Bits::Type>,
@@ -211,9 +211,9 @@ where
         AbsVal<Diff<Exp, ToExp>>: Integer
     {
         if Le::<Bits, ToBits>::to_bool() {
-            self.to_bits::<ToBits>().to_exp()
+            self.into_bits::<ToBits>().into_exp()
         } else {
-            self.to_exp::<ToExp>().to_bits()
+            self.into_exp::<ToExp>().into_bits()
         }
     }
 }

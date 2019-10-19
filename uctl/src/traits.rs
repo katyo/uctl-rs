@@ -1,3 +1,5 @@
+#![allow(clippy::let_and_return)]
+
 use core::marker::PhantomData;
 
 /// Transducer trait

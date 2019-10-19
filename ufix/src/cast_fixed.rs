@@ -60,8 +60,7 @@ mod test {
     use crate::{bin::{IFix32, IFix64}, Cast};
 
     type F32 = IFix32<N16>;
-    type F64 = IFix64<N16>;
-    type F64D = IFix64<N32>;
+    type F64 = IFix64<N32>;
 
     #[test]
     fn mul() {
@@ -76,7 +75,7 @@ mod test {
     fn div() {
         let a = F32::from(6789.12);
         let b = F32::from(12.345);
-        let c = F32::cast(F64D::cast(a) / b);
+        let c = F32::cast(F64::cast(a) / b);
 
         assert_eq!(c, F32::from(549.9496));
     }
