@@ -18,6 +18,21 @@ macro_rules! cast_from {
                 Self::from(value)
             }
         }
+
+        impl<Bits, Base, Exp> Cast<Fix<Bits, Base, Exp>> for $type
+        where
+            $type: Cast<Bits::Type>,
+            Bits: BitsType,
+            Bits::Type: FromUnsigned + Pow + Cast<$type> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
+            Base: Unsigned,
+            Z0: IsLess<Exp>,
+            Exp: Abs,
+            AbsVal<Exp>: Integer,
+        {
+            fn cast(val: Fix<Bits, Base, Exp>) -> $type {
+                val.into()
+            }
+        }
     }
 }
 

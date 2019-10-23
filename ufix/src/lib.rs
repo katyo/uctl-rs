@@ -114,6 +114,7 @@ mod fixed;
 mod operators;
 mod aliases;
 mod from_number;
+mod into_number;
 mod cast_fixed;
 mod format;
 
