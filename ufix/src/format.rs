@@ -4,7 +4,7 @@ use super::{BitsType, Fix};
 
 impl<Bits, Base, Exp> Debug for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: Debug,
     Base: Unsigned,
     Exp: Integer

@@ -9,11 +9,11 @@ To make it possible it introduces generic fixed-point type with usable and flexi
 
 The introduced numeric type is generic with three type parameters:
 
-* `Bits` - the number of valuable bits which represents __mantissa__
+* `Bits` - the number of valuable digits which represents __mantissa__
 * `Base` - the __base__ of type (2 for binary point, 10 for decimal point, etc.)
 * `Exp` - the __exponent__ of type
 
-So the value of type can be represented as _2 <sup>`Bits`</sup> × `Base` <sup>`Exp`</sup>_.
+So the value of type can be represented as _`bits` × `Base` <sup>`Exp`</sup>_, where `bits` means mantissa value.
 
 ```
 # use ufix::{Fix, bin, dec};
@@ -101,6 +101,24 @@ let c = Fix::<P32, N16>::cast(a) / b;
 
 assert_eq!(c, Fix::<P16, N8>::from(1.5647));
 ```
+
+### Evolution of `Fix` type
+
+0. **fix** crate by _Curtis McEnroe_.
+
+   That crate defines a simple fixed point type which support generic *base* and *exponent*.
+   This work is started as successor of **fix**.
+
+1. Changing meaning of `Bits` parameter from *mantisa type* to *number of mantissa bits*.
+
+   In order to get more flexibility of fixed-point type we need know number of valuable bits of mantissa.
+   So we would be able select appropriate types of results of operations easy.
+   Also this make it possible to operate with operands with different mantissa and exponent.
+
+2. Changing meaning of `Bits` parameter from *number of mantissa bits* to *number of mantissa digits according to base*.
+
+   Actually it is more easy to operate with actual number of digits in number instead of binary bits.
+   Because the digits depended from base, so for binary fixed-point types it is still bits as before.
 
  */
 

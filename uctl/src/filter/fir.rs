@@ -67,7 +67,7 @@ where B: Copy + Mul<L::Value>,
 #[cfg(test)]
 mod test {
     use crate::{pfdl::Store as DL};
-    use typenum::{P16, P32, U3};
+    use typenum::{P8, P16, U3};
     use ufix::si;
     use super::*;
 
@@ -94,9 +94,9 @@ mod test {
 
     #[test]
     fn fir_fix_base10_n3() {
-        type I = si::Micro<P16>;
-        type O = si::Nano<P32>;
-        type P = si::Milli<P16>;
+        type I = si::Micro<P8>;
+        type O = si::Nano<P16>;
+        type P = si::Milli<P8>;
 
         let param = Param::<P, U3>::from([P::new(0_456), P::new(-0_137), P::new(0_702), P::new(-1_421)]);
         let mut state = DL::from(I::new(0));

@@ -32,10 +32,10 @@ be represented exactly in base-10. With `Fix`, we can choose the precision we wa
 at compile-time. In this case, hundredths of a dollar will do.
 
 ```
-use typenum::U7;
+use typenum::U3;
 use ufix::si::Centi; // Fix<_, U10, N2>
 
-assert_eq!(Centi::<U7>::new(0_30), Centi::<U7>::new(0_10) + Centi::<U7>::new(0_20));
+assert_eq!(Centi::<U3>::new(0_30), Centi::<U3>::new(0_10) + Centi::<U3>::new(0_20));
 ```
 
 But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
@@ -43,29 +43,29 @@ slower than bit-shifting, but that's only needed when _moving_ the point. With `
 only done explicitly with the `convert` method.
 
 ```
-use typenum::U9;
+use typenum::U4;
 use ufix::si::{Centi, Milli};
 
-assert_eq!(Milli::<U9>::new(0_300), Centi::<U9>::new(0_30).convert());
+assert_eq!(Milli::<U4>::new(0_300), Centi::<U4>::new(0_30).convert());
 ```
 
 We can also choose a base-2 scale just as easily.
 
 ```
-use typenum::U20;
+use typenum::U5;
 use ufix::iec::{Kibi, Mebi};
 
-assert_eq!(Kibi::<U20>::new(1024), Mebi::<U20>::new(1).convert());
+assert_eq!(Kibi::<U5>::new(1024), Mebi::<U5>::new(1).convert());
 ```
 
 It's also worth noting that the type-level scale changes when multiplying and dividing,
 avoiding any implicit conversion.
 
 ```
-use typenum::{U2, U4};
+use typenum::{U1, U2};
 use ufix::iec::{Gibi, Kibi, Mebi};
 
-assert_eq!(Mebi::<U2>::new(3), Gibi::<U4>::new(6) / Kibi::<U2>::new(2));
+assert_eq!(Mebi::<U1>::new(3), Gibi::<U2>::new(6) / Kibi::<U1>::new(2));
 ```
 
 # `no_std`
@@ -125,7 +125,7 @@ integers _Bits_, _Base_ and _Exp_, respectively.
 #[repr(transparent)]
 pub struct Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
 {
     /// The underlying integer.
     pub bits: Bits::Type,
@@ -135,18 +135,18 @@ where
 
 impl<Bits, Base, Exp> Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
 {
     /// Creates a number.
     ///
     /// # Examples
     ///
     /// ```
-    /// use typenum::P7;
+    /// use typenum::P2;
     /// use ufix::si::{Kilo, Milli};
     ///
-    /// Milli::<P7>::new(25); // 0.025
-    /// Kilo::<P7>::new(25); // 25 000
+    /// Milli::<P2>::new(25); // 0.025
+    /// Kilo::<P2>::new(25); // 25 000
     /// ```
     pub fn new(bits: Bits::Type) -> Self {
         Fix { bits, marker: PhantomData }
@@ -179,7 +179,7 @@ where
     /// Convert to another _Bits_.
     fn into_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
     where
-        ToBits: BitsType,
+        ToBits: BitsType<Base>,
         ToBits::Type: Cast<Bits::Type>,
     {
         Fix::new(ToBits::Type::cast(self.bits))
@@ -190,11 +190,11 @@ where
     /// # Examples
     ///
     /// ```
-    /// use typenum::U20;
+    /// use typenum::U1;
     /// use ufix::si::{Kilo, Milli};
     ///
-    /// let kilo = Kilo::<U20>::new(5);
-    /// let milli = Milli::<U20>::new(5_000_000);
+    /// let kilo = Kilo::<U1>::new(5);
+    /// let milli = Milli::<U1>::new(5_000_000);
     ///
     /// assert_eq!(kilo, milli.convert());
     /// assert_eq!(milli, kilo.convert());
@@ -204,7 +204,7 @@ where
         Bits: IsLess<ToBits>,
         Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
-        ToBits: BitsType,
+        ToBits: BitsType<Base>,
         ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + Cast<Bits::Type>,
         Exp: Sub<ToExp>,
         Diff<Exp, ToExp>: Abs + IsLess<Z0>,

@@ -9,7 +9,7 @@ use super::{Fix, BitsType, FromUnsigned, Pow, Cast};
 
 impl<Bits, Base, Exp> Neg for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: Neg<Output = Bits::Type>
 {
     type Output = Self;
@@ -24,18 +24,18 @@ where
 ///
 impl<LBits, RBits, Base, LExp, RExp> Add<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
+    LBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
     LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
 
-    RBits: BitsType + IsLess<Maximum<LBits, RBits>>,
+    RBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>>,
     RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
 
-    Maximum<LBits, RBits>: BitsType,
-    <Maximum<LBits, RBits> as BitsType>::Type: FromUnsigned + Pow +
+    Maximum<LBits, RBits>: BitsType<Base>,
+    <Maximum<LBits, RBits> as BitsType<Base>>::Type: FromUnsigned + Pow +
         Cast<LBits::Type> + Cast<RBits::Type> +
-        Mul<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
-        Div<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
-        Add<Output = <Maximum<LBits, RBits> as BitsType>::Type>,
+        Mul<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
+        Div<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
+        Add<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type>,
 
     Base: Unsigned,
 
@@ -61,18 +61,18 @@ where
 ///
 impl<LBits, RBits, Base, LExp, RExp> Sub<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
+    LBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
     LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
 
-    RBits: BitsType + IsLess<Maximum<LBits, RBits>>,
+    RBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>>,
     RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
 
-    Maximum<LBits, RBits>: BitsType,
-    <Maximum<LBits, RBits> as BitsType>::Type: FromUnsigned + Pow +
+    Maximum<LBits, RBits>: BitsType<Base>,
+    <Maximum<LBits, RBits> as BitsType<Base>>::Type: FromUnsigned + Pow +
         Cast<LBits::Type> + Cast<RBits::Type> +
-        Mul<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
-        Div<Output = <Maximum<LBits, RBits> as BitsType>::Type> +
-        Sub<Output = <Maximum<LBits, RBits> as BitsType>::Type>,
+        Mul<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
+        Div<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
+        Sub<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type>,
 
     Base: Unsigned,
 
@@ -98,17 +98,17 @@ where
 ///
 impl<LBits, RBits, Base, LExp, RExp> Mul<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType + Add<RBits>,
-    RBits: BitsType,
-    Sum<LBits, RBits>: BitsType,
-    <Sum<LBits, RBits> as BitsType>::Type: Cast<LBits::Type> + Cast<RBits::Type> +
-      Mul<Output = <Sum<LBits, RBits> as BitsType>::Type>,
+    LBits: BitsType<Base> + Add<RBits>,
+    RBits: BitsType<Base>,
+    Sum<LBits, RBits>: BitsType<Base>,
+    <Sum<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type> + Cast<RBits::Type> +
+      Mul<Output = <Sum<LBits, RBits> as BitsType<Base>>::Type>,
     LExp: Add<RExp>,
 {
     type Output = Fix<Sum<LBits, RBits>, Base, Sum<LExp, RExp>>;
     fn mul(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(<Sum<LBits, RBits> as BitsType>::Type::cast(self.bits) *
-                          <Sum<LBits, RBits> as BitsType>::Type::cast(rhs.bits))
+        Self::Output::new(<Sum<LBits, RBits> as BitsType<Base>>::Type::cast(self.bits) *
+                          <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(rhs.bits))
     }
 }
 
@@ -118,17 +118,17 @@ where
 ///
 impl<LBits, RBits, Base, LExp, RExp> Div<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType + Sub<RBits>,
-    RBits: BitsType,
-    Diff<LBits, RBits>: BitsType,
+    LBits: BitsType<Base> + Sub<RBits>,
+    RBits: BitsType<Base>,
+    Diff<LBits, RBits>: BitsType<Base>,
     LBits::Type: Cast<RBits::Type> + Div<Output = LBits::Type>,
     LExp: Sub<RExp>,
-    <Diff<LBits, RBits> as BitsType>::Type: Cast<LBits::Type>,
+    <Diff<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type>,
 {
     type Output = Fix<Diff<LBits, RBits>, Base, Diff<LExp, RExp>>;
     fn div(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
         Self::Output::new(
-            <Diff<LBits, RBits> as BitsType>::Type::cast(
+            <Diff<LBits, RBits> as BitsType<Base>>::Type::cast(
                 self.bits / LBits::Type::cast(rhs.bits)))
     }
 }
@@ -137,7 +137,7 @@ where
 ///
 impl<Bits, Base, Exp> Rem for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: Rem<Output = Bits::Type>
 {
     type Output = Self;
@@ -182,7 +182,7 @@ where Bits: Rem<Output = Bits> {
 
 impl<Bits, Base, Exp> AddAssign for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: AddAssign,
 {
     fn add_assign(&mut self, rhs: Self) {
@@ -192,7 +192,7 @@ where
 
 impl<Bits, Base, Exp> SubAssign for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: SubAssign,
 {
     fn sub_assign(&mut self, rhs: Self) {
@@ -202,7 +202,7 @@ where
 
 impl<Type, Bits, Base, Exp> MulAssign<Type> for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: MulAssign<Type>,
 {
     fn mul_assign(&mut self, rhs: Type) {
@@ -212,7 +212,7 @@ where
 
 impl<Type, Bits, Base, Exp> DivAssign<Type> for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: DivAssign<Type>,
 {
     fn div_assign(&mut self, rhs: Type) {
@@ -222,7 +222,7 @@ where
 
 impl<Bits, Base, LExp, RExp> RemAssign<Fix<Bits, Base, RExp>> for Fix<Bits, Base, LExp>
 where
-    Bits: BitsType,
+    Bits: BitsType<Base>,
     Bits::Type: RemAssign<Bits::Type>,
 {
     fn rem_assign(&mut self, rhs: Fix<Bits, Base, RExp>) {
@@ -249,47 +249,47 @@ mod tests {
 
     #[test]
     fn convert_milli_to_kilo() {
-        assert_eq!(Kilo::<P16>::new(15), Milli::<P32>::new(15_000_000).convert());
+        assert_eq!(Kilo::<P2>::new(15), Milli::<P8>::new(15_000_000).convert());
     }
 
     #[test]
     fn convert_kilo_to_milli() {
-        assert_eq!(Milli::<U32>::new(15_000_000), Kilo::<U8>::new(15).convert());
+        assert_eq!(Milli::<U8>::new(15_000_000), Kilo::<U2>::new(15).convert());
     }
 
     #[test]
     fn cmp() {
-        assert!(Kilo::<U3>::new(1) < Kilo::new(2));
+        assert!(Kilo::<U1>::new(1) < Kilo::new(2));
     }
 
     #[test]
     fn neg() {
-        assert_eq!(Kilo::<P32>::new(-1), -Kilo::new(1));
+        assert_eq!(Kilo::<P1>::new(-1), -Kilo::new(1));
     }
 
     #[test]
     fn add() {
-        assert_eq!(Kilo::<P8>::new(3), Kilo::<P8>::new(1) + Kilo::<P8>::new(2));
+        assert_eq!(Kilo::<P1>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
     }
 
     #[test]
     fn sub() {
-        assert_eq!(Kilo::<P8>::new(1), Kilo::<P8>::new(3) - Kilo::<P8>::new(2));
+        assert_eq!(Kilo::<P1>::new(1), Kilo::<P1>::new(3) - Kilo::<P1>::new(2));
     }
 
     #[test]
     fn mul() {
-        assert_eq!(Unit::new(6), Kilo::<P2>::new(2) * Milli::<P2>::new(3));
+        assert_eq!(Unit::new(6), Kilo::<P1>::new(2) * Milli::<P1>::new(3));
     }
 
     #[test]
     fn div() {
-        assert_eq!(Unit::new(3), Kilo::<P3>::new(6) / Kilo::<P2>::new(2));
+        assert_eq!(Unit::new(3), Kilo::<P2>::new(6) / Kilo::<P1>::new(2));
     }
 
     #[test]
     fn rem() {
-        assert_eq!(Kilo::<P16>::new(1), Kilo::new(6) % Kilo::new(5));
+        assert_eq!(Kilo::<P1>::new(1), Kilo::new(6) % Kilo::new(5));
     }
 
     /*
@@ -311,35 +311,35 @@ mod tests {
 
     #[test]
     fn add_assign() {
-        let mut a = Kilo::<P18>::new(1);
+        let mut a = Kilo::<P5>::new(1);
         a += Kilo::new(2);
         assert_eq!(Kilo::new(3), a);
     }
 
     #[test]
     fn sub_assign() {
-        let mut a = Kilo::<U18>::new(3);
+        let mut a = Kilo::<U5>::new(3);
         a -= Kilo::new(2);
         assert_eq!(Kilo::new(1), a);
     }
 
     #[test]
     fn mul_assign_bits() {
-        let mut a = Kilo::<P18>::new(2);
+        let mut a = Kilo::<P5>::new(2);
         a *= 3;
         assert_eq!(Kilo::new(6), a);
     }
 
     #[test]
     fn div_assign_bits() {
-        let mut a = Kilo::<P15>::new(6);
+        let mut a = Kilo::<P9>::new(6);
         a /= 2;
         assert_eq!(Kilo::new(3), a);
     }
 
     #[test]
     fn rem_assign() {
-        let mut a = Kilo::<P15>::new(6);
+        let mut a = Kilo::<P9>::new(6);
         a %= Milli::new(5);
         assert_eq!(Kilo::new(1), a);
     }

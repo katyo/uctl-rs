@@ -7,7 +7,7 @@ macro_rules! cast_from {
         impl<Bits, Base, Exp> Cast<$type> for Fix<Bits, Base, Exp>
         where
             $type: Cast<Bits::Type>,
-            Bits: BitsType,
+            Bits: BitsType<Base>,
             Bits::Type: FromUnsigned + Pow + Cast<$type> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
             Base: Unsigned,
             Z0: IsLess<Exp>,
@@ -22,7 +22,7 @@ macro_rules! cast_from {
         impl<Bits, Base, Exp> Cast<Fix<Bits, Base, Exp>> for $type
         where
             $type: Cast<Bits::Type>,
-            Bits: BitsType,
+            Bits: BitsType<Base>,
             Bits::Type: FromUnsigned + Pow + Cast<$type> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
             Base: Unsigned,
             Z0: IsLess<Exp>,
@@ -55,9 +55,9 @@ cast_from!(f64);
 
 impl<Bits, ToBits, Base, Exp, ToExp> Cast<Fix<Bits, Base, Exp>> for Fix<ToBits, Base, ToExp>
 where
-    Bits: BitsType + IsLess<ToBits>,
+    Bits: BitsType<Base> + IsLess<ToBits>,
     Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
-    ToBits: BitsType,
+    ToBits: BitsType<Base>,
     ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + Cast<Bits::Type>,
     Base: Unsigned,
     Exp: Sub<ToExp>,
