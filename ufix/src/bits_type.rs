@@ -2,385 +2,82 @@ pub trait BitsType {
     type Type;
 }
 
-/*
-macro_rules! type_type {
-    ($type: tt) => {
-        impl super::BitsType for $type {
-            type Type = $type;
-        }
-    }
-}
-
-type_type!(u8);
-type_type!(u16);
-type_type!(u32);
-type_type!(u64);
-#[cfg(feature = "i128")]
-type_type!(u128);
-type_type!(usize);
-
-type_type!(i8);
-type_type!(i16);
-type_type!(i32);
-type_type!(i64);
-#[cfg(feature = "i128")]
-type_type!(i128);
-type_type!(isize);
-*/
-
 macro_rules! bits_type {
-    ($bits: tt, $type: tt) => {
-        impl super::BitsType for typenum::$bits {
+    ( $($type: ty: $($bits: ident)+,)+ ) => { $($(
+        impl BitsType for typenum::$bits {
             type Type = $type;
         }
-    }
+    )+)+ };
 }
 
-// 8
 #[cfg(feature = "word8")]
-mod _bw_8 {
-    bits_type!(U1, u8);
-    bits_type!(U2, u8);
-    bits_type!(U3, u8);
-    bits_type!(U4, u8);
-    bits_type!(U5, u8);
-    bits_type!(U6, u8);
-    bits_type!(U7, u8);
-    bits_type!(U8, u8);
-
-    bits_type!(P1, i8);
-    bits_type!(P2, i8);
-    bits_type!(P3, i8);
-    bits_type!(P4, i8);
-    bits_type!(P5, i8);
-    bits_type!(P6, i8);
-    bits_type!(P7, i8);
-    bits_type!(P8, i8);
+mod _8 {
+    pub type U = u8;
+    pub type I = i8;
 }
 
 #[cfg(all(not(feature = "word8"), feature = "word16"))]
-mod _bw_8 {
-    bits_type!(U1, u16);
-    bits_type!(U2, u16);
-    bits_type!(U3, u16);
-    bits_type!(U4, u16);
-    bits_type!(U5, u16);
-    bits_type!(U6, u16);
-    bits_type!(U7, u16);
-    bits_type!(U8, u16);
-
-    bits_type!(P1, i16);
-    bits_type!(P2, i16);
-    bits_type!(P3, i16);
-    bits_type!(P4, i16);
-    bits_type!(P5, i16);
-    bits_type!(P6, i16);
-    bits_type!(P7, i16);
-    bits_type!(P8, i16);
+mod _8 {
+    pub type U = u16;
+    pub type I = i16;
 }
 
-#[cfg(not(any(feature = "word8", feature = "word16")))]
-mod _bw_8 {
-    bits_type!(U1, u32);
-    bits_type!(U2, u32);
-    bits_type!(U3, u32);
-    bits_type!(U4, u32);
-    bits_type!(U5, u32);
-    bits_type!(U6, u32);
-    bits_type!(U7, u32);
-    bits_type!(U8, u32);
-
-    bits_type!(P1, i32);
-    bits_type!(P2, i32);
-    bits_type!(P3, i32);
-    bits_type!(P4, i32);
-    bits_type!(P5, i32);
-    bits_type!(P6, i32);
-    bits_type!(P7, i32);
-    bits_type!(P8, i32);
+#[cfg(all(not(feature = "word8"), not(feature = "word16")))]
+mod _8 {
+    pub type U = u32;
+    pub type I = i32;
 }
 
-// 16
 #[cfg(any(feature = "word8", feature = "word16"))]
-mod _bw_16 {
-    bits_type!(U9, u16);
-    bits_type!(U10, u16);
-    bits_type!(U11, u16);
-    bits_type!(U12, u16);
-    bits_type!(U13, u16);
-    bits_type!(U14, u16);
-    bits_type!(U15, u16);
-    bits_type!(U16, u16);
-
-    bits_type!(P9, i16);
-    bits_type!(P10, i16);
-    bits_type!(P11, i16);
-    bits_type!(P12, i16);
-    bits_type!(P13, i16);
-    bits_type!(P14, i16);
-    bits_type!(P15, i16);
-    bits_type!(P16, i16);
+mod _16 {
+    pub type U = u16;
+    pub type I = i16;
 }
 
 #[cfg(not(any(feature = "word8", feature = "word16")))]
-mod _bw_16 {
-    bits_type!(U9, u32);
-    bits_type!(U10, u32);
-    bits_type!(U11, u32);
-    bits_type!(U12, u32);
-    bits_type!(U13, u32);
-    bits_type!(U14, u32);
-    bits_type!(U15, u32);
-    bits_type!(U16, u32);
-
-    bits_type!(P9, i32);
-    bits_type!(P10, i32);
-    bits_type!(P11, i32);
-    bits_type!(P12, i32);
-    bits_type!(P13, i32);
-    bits_type!(P14, i32);
-    bits_type!(P15, i32);
-    bits_type!(P16, i32);
+mod _16 {
+    pub type U = u32;
+    pub type I = i32;
 }
 
-// 32
-mod _bw_32 {
-    bits_type!(U17, u32);
-    bits_type!(U18, u32);
-    bits_type!(U19, u32);
-    bits_type!(U20, u32);
-    bits_type!(U21, u32);
-    bits_type!(U22, u32);
-    bits_type!(U23, u32);
-    bits_type!(U24, u32);
-    bits_type!(U25, u32);
-    bits_type!(U26, u32);
-    bits_type!(U27, u32);
-    bits_type!(U28, u32);
-    bits_type!(U29, u32);
-    bits_type!(U30, u32);
-    bits_type!(U31, u32);
-    bits_type!(U32, u32);
-
-    bits_type!(P17, i32);
-    bits_type!(P18, i32);
-    bits_type!(P19, i32);
-    bits_type!(P20, i32);
-    bits_type!(P21, i32);
-    bits_type!(P22, i32);
-    bits_type!(P23, i32);
-    bits_type!(P24, i32);
-    bits_type!(P25, i32);
-    bits_type!(P26, i32);
-    bits_type!(P27, i32);
-    bits_type!(P28, i32);
-    bits_type!(P29, i32);
-    bits_type!(P30, i32);
-    bits_type!(P31, i32);
-    bits_type!(P32, i32);
+mod _32 {
+    pub type U = u32;
+    pub type I = i32;
 }
 
-// 64
-mod _bw_64 {
-    bits_type!(U33, u64);
-    bits_type!(U34, u64);
-    bits_type!(U35, u64);
-    bits_type!(U36, u64);
-    bits_type!(U37, u64);
-    bits_type!(U38, u64);
-    bits_type!(U39, u64);
-    bits_type!(U40, u64);
-    bits_type!(U41, u64);
-    bits_type!(U42, u64);
-    bits_type!(U43, u64);
-    bits_type!(U44, u64);
-    bits_type!(U45, u64);
-    bits_type!(U46, u64);
-    bits_type!(U47, u64);
-    bits_type!(U48, u64);
-    bits_type!(U49, u64);
-    bits_type!(U50, u64);
-    bits_type!(U51, u64);
-    bits_type!(U52, u64);
-    bits_type!(U53, u64);
-    bits_type!(U54, u64);
-    bits_type!(U55, u64);
-    bits_type!(U56, u64);
-    bits_type!(U57, u64);
-    bits_type!(U58, u64);
-    bits_type!(U59, u64);
-    bits_type!(U60, u64);
-    bits_type!(U61, u64);
-    bits_type!(U62, u64);
-    bits_type!(U63, u64);
-    bits_type!(U64, u64);
+mod _64 {
+    pub type U = u64;
+    pub type I = i64;
+}
 
-    bits_type!(P33, i64);
-    bits_type!(P34, i64);
-    bits_type!(P35, i64);
-    bits_type!(P36, i64);
-    bits_type!(P37, i64);
-    bits_type!(P38, i64);
-    bits_type!(P39, i64);
-    bits_type!(P40, i64);
-    bits_type!(P41, i64);
-    bits_type!(P42, i64);
-    bits_type!(P43, i64);
-    bits_type!(P44, i64);
-    bits_type!(P45, i64);
-    bits_type!(P46, i64);
-    bits_type!(P47, i64);
-    bits_type!(P48, i64);
-    bits_type!(P49, i64);
-    bits_type!(P50, i64);
-    bits_type!(P51, i64);
-    bits_type!(P52, i64);
-    bits_type!(P53, i64);
-    bits_type!(P54, i64);
-    bits_type!(P55, i64);
-    bits_type!(P56, i64);
-    bits_type!(P57, i64);
-    bits_type!(P58, i64);
-    bits_type!(P59, i64);
-    bits_type!(P60, i64);
-    bits_type!(P61, i64);
-    bits_type!(P62, i64);
-    bits_type!(P63, i64);
-    bits_type!(P64, i64);
+bits_type! {
+    _8::U: U1 U2 U3 U4 U5 U6 U7 U8,
+    _8::I: P1 P2 P3 P4 P5 P6 P7 P8,
+
+    _16::U: U9 U10 U11 U12 U13 U14 U15 U16,
+    _16::I: P9 P10 P11 P12 P13 P14 P15 P16,
+
+    _32::U: U17 U18 U19 U20 U21 U22 U23 U24 U25 U26 U27 U28 U29 U30 U31 U32,
+    _32::I: P17 P18 P19 P20 P21 P22 P23 P24 P25 P26 P27 P28 P29 P30 P31 P32,
+
+    _64::U: U33 U34 U35 U36 U37 U38 U39 U40 U41 U42 U43 U44 U45 U46 U47 U48 U49 U50 U51 U52 U53 U54 U55 U56 U57 U58 U59 U60 U61 U62 U63 U64,
+    _64::I: P33 P34 P35 P36 P37 P38 P39 P40 P41 P42 P43 P44 P45 P46 P47 P48 P49 P50 P51 P52 P53 P54 P55 P56 P57 P58 P59 P60 P61 P62 P63 P64,
 }
 
 // 128
 #[cfg(feature = "i128")]
-mod _bw_128 {
-    bits_type!(U65, u128);
-    bits_type!(U66, u128);
-    bits_type!(U67, u128);
-    bits_type!(U68, u128);
-    bits_type!(U69, u128);
-    bits_type!(U70, u128);
-    bits_type!(U71, u128);
-    bits_type!(U72, u128);
-    bits_type!(U73, u128);
-    bits_type!(U74, u128);
-    bits_type!(U75, u128);
-    bits_type!(U76, u128);
-    bits_type!(U77, u128);
-    bits_type!(U78, u128);
-    bits_type!(U79, u128);
-    bits_type!(U80, u128);
-    bits_type!(U81, u128);
-    bits_type!(U82, u128);
-    bits_type!(U83, u128);
-    bits_type!(U84, u128);
-    bits_type!(U85, u128);
-    bits_type!(U86, u128);
-    bits_type!(U87, u128);
-    bits_type!(U88, u128);
-    bits_type!(U89, u128);
-    bits_type!(U90, u128);
-    bits_type!(U91, u128);
-    bits_type!(U92, u128);
-    bits_type!(U93, u128);
-    bits_type!(U94, u128);
-    bits_type!(U95, u128);
-    bits_type!(U96, u128);
-    bits_type!(U97, u128);
-    bits_type!(U98, u128);
-    bits_type!(U99, u128);
-    bits_type!(U100, u128);
-    bits_type!(U101, u128);
-    bits_type!(U102, u128);
-    bits_type!(U103, u128);
-    bits_type!(U104, u128);
-    bits_type!(U105, u128);
-    bits_type!(U106, u128);
-    bits_type!(U107, u128);
-    bits_type!(U108, u128);
-    bits_type!(U109, u128);
-    bits_type!(U110, u128);
-    bits_type!(U111, u128);
-    bits_type!(U112, u128);
-    bits_type!(U113, u128);
-    bits_type!(U114, u128);
-    bits_type!(U115, u128);
-    bits_type!(U116, u128);
-    bits_type!(U117, u128);
-    bits_type!(U118, u128);
-    bits_type!(U119, u128);
-    bits_type!(U120, u128);
-    bits_type!(U121, u128);
-    bits_type!(U122, u128);
-    bits_type!(U123, u128);
-    bits_type!(U124, u128);
-    bits_type!(U125, u128);
-    bits_type!(U126, u128);
-    bits_type!(U127, u128);
-    bits_type!(U128, u128);
+mod _128 {
+    use super::BitsType;
 
-    bits_type!(P65, i128);
-    bits_type!(P66, i128);
-    bits_type!(P67, i128);
-    bits_type!(P68, i128);
-    bits_type!(P69, i128);
-    bits_type!(P70, i128);
-    bits_type!(P71, i128);
-    bits_type!(P72, i128);
-    bits_type!(P73, i128);
-    bits_type!(P74, i128);
-    bits_type!(P75, i128);
-    bits_type!(P76, i128);
-    bits_type!(P77, i128);
-    bits_type!(P78, i128);
-    bits_type!(P79, i128);
-    bits_type!(P80, i128);
-    bits_type!(P81, i128);
-    bits_type!(P82, i128);
-    bits_type!(P83, i128);
-    bits_type!(P84, i128);
-    bits_type!(P85, i128);
-    bits_type!(P86, i128);
-    bits_type!(P87, i128);
-    bits_type!(P88, i128);
-    bits_type!(P89, i128);
-    bits_type!(P90, i128);
-    bits_type!(P91, i128);
-    bits_type!(P92, i128);
-    bits_type!(P93, i128);
-    bits_type!(P94, i128);
-    bits_type!(P95, i128);
-    bits_type!(P96, i128);
-    bits_type!(P97, i128);
-    bits_type!(P98, i128);
-    bits_type!(P99, i128);
-    bits_type!(P100, i128);
-    bits_type!(P101, i128);
-    bits_type!(P102, i128);
-    bits_type!(P103, i128);
-    bits_type!(P104, i128);
-    bits_type!(P105, i128);
-    bits_type!(P106, i128);
-    bits_type!(P107, i128);
-    bits_type!(P108, i128);
-    bits_type!(P109, i128);
-    bits_type!(P110, i128);
-    bits_type!(P111, i128);
-    bits_type!(P112, i128);
-    bits_type!(P113, i128);
-    bits_type!(P114, i128);
-    bits_type!(P115, i128);
-    bits_type!(P116, i128);
-    bits_type!(P117, i128);
-    bits_type!(P118, i128);
-    bits_type!(P119, i128);
-    bits_type!(P120, i128);
-    bits_type!(P121, i128);
-    bits_type!(P122, i128);
-    bits_type!(P123, i128);
-    bits_type!(P124, i128);
-    bits_type!(P125, i128);
-    bits_type!(P126, i128);
-    bits_type!(P127, i128);
-    bits_type!(P128, i128);
+    mod _128 {
+        pub type U = u128;
+        pub type I = i128;
+    }
+
+    bits_type! {
+        _128::U: U65 U66 U67 U68 U69 U70 U71 U72 U73 U74 U75 U76 U77 U78 U79 U80 U81 U82 U83 U84 U85 U86 U87 U88 U89 U90 U91 U92 U93 U94 U95 U96 U97 U98 U99 U100 U101 U102 U103 U104 U105 U106 U107 U108 U109 U110 U111 U112 U113 U114 U115 U116 U117 U118 U119 U120 U121 U122 U123 U124 U125 U126 U127 U128,
+        _128::I: P65 P66 P67 P68 P69 P70 P71 P72 P73 P74 P75 P76 P77 P78 P79 P80 P81 P82 P83 P84 P85 P86 P87 P88 P89 P90 P91 P92 P93 P94 P95 P96 P97 P98 P99 P100 P101 P102 P103 P104 P105 P106 P107 P108 P109 P110 P111 P112 P113 P114 P115 P116 P117 P118 P119 P120 P121 P122 P123 P124 P125 P126 P127 P128,
+    }
 }
 
 #[cfg(test)]
