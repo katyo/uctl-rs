@@ -30,13 +30,11 @@ In any case you should create specific tests to be sure in correctness of operat
 
 #![cfg_attr(feature = "no_std", no_std)]
 
-mod traits;
 mod types;
 mod filter;
 mod regulator;
 mod transform;
 
-pub use traits::*;
 pub use types::*;
 pub use filter::*;
 pub use regulator::*;
