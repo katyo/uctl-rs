@@ -1,6 +1,6 @@
-use core::ops::{Div, Sub, Mul};
-use typenum::{IsLess, Abs, AbsVal, Unsigned, Integer, Z0, Diff};
-use crate::{FromUnsigned, BitsType, Pow, Fix, Cast};
+use crate::{BitsType, Cast, Fix, FromUnsigned, Pow};
+use core::ops::{Div, Mul, Sub};
+use typenum::{Abs, AbsVal, Diff, Integer, IsLess, Unsigned, Z0};
 
 macro_rules! cast_from {
     ($type: ty) => {
@@ -8,7 +8,11 @@ macro_rules! cast_from {
         where
             $type: Cast<Bits::Type>,
             Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned + Pow + Cast<$type> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
+            Bits::Type: FromUnsigned
+                + Pow
+                + Cast<$type>
+                + Mul<Bits::Type, Output = Bits::Type>
+                + Div<Bits::Type, Output = Bits::Type>,
             Base: Unsigned,
             Z0: IsLess<Exp>,
             Exp: Abs,
@@ -23,7 +27,11 @@ macro_rules! cast_from {
         where
             $type: Cast<Bits::Type>,
             Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned + Pow + Cast<$type> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
+            Bits::Type: FromUnsigned
+                + Pow
+                + Cast<$type>
+                + Mul<Bits::Type, Output = Bits::Type>
+                + Div<Bits::Type, Output = Bits::Type>,
             Base: Unsigned,
             Z0: IsLess<Exp>,
             Exp: Abs,
@@ -33,7 +41,7 @@ macro_rules! cast_from {
                 val.into()
             }
         }
-    }
+    };
 }
 
 cast_from!(u8);
@@ -58,11 +66,15 @@ where
     Bits: BitsType<Base> + IsLess<ToBits>,
     Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
     ToBits: BitsType<Base>,
-    ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + Cast<Bits::Type>,
+    ToBits::Type: FromUnsigned
+        + Pow
+        + Mul<Output = ToBits::Type>
+        + Div<Output = ToBits::Type>
+        + Cast<Bits::Type>,
     Base: Unsigned,
     Exp: Sub<ToExp>,
     Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-    AbsVal<Diff<Exp, ToExp>>: Integer
+    AbsVal<Diff<Exp, ToExp>>: Integer,
 {
     fn cast(value: Fix<Bits, Base, Exp>) -> Self {
         value.convert()
@@ -71,8 +83,11 @@ where
 
 #[cfg(test)]
 mod test {
+    use crate::{
+        bin::{IFix32, IFix64},
+        Cast,
+    };
     use typenum::*;
-    use crate::{bin::{IFix32, IFix64}, Cast};
 
     type F32 = IFix32<N16>;
     type F64 = IFix64<N32>;

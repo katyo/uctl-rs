@@ -15,7 +15,7 @@ travis-ci = { repoitory = "katyo/ucontrol" }
 maintenance = { status = "experimental" }
 
 [dependencies]
-typenum = "1"
+typenum = "^1"
 
 [features]
 default = []

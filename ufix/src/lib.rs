@@ -124,21 +124,21 @@ assert_eq!(c, Fix::<P16, N8>::from(1.5647));
 
 #![cfg_attr(feature = "no_std", no_std)]
 
-mod cast;
-mod bits_type;
-mod from_unsigned;
-mod unsigned_pow;
-mod fixed;
-mod operators;
 mod aliases;
-mod from_number;
-mod into_number;
+mod bits_type;
+mod cast;
 mod cast_fixed;
+mod fixed;
 mod format;
+mod from_number;
+mod from_unsigned;
+mod into_number;
+mod operators;
+mod unsigned_pow;
 
+pub use self::aliases::*;
+pub use self::bits_type::{BitsType, TypeBits};
 pub use self::cast::Cast;
-pub use self::bits_type::BitsType;
+pub use self::fixed::Fix;
 pub use self::from_unsigned::FromUnsigned;
 pub use self::unsigned_pow::UnsignedPow as Pow;
-pub use self::fixed::Fix;
-pub use self::aliases::*;

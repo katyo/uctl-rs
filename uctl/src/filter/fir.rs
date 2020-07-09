@@ -10,14 +10,14 @@ See also [Finite impulse response](https://en.wikipedia.org/wiki/Finite_impulse_
 
 */
 
+use crate::{DelayLine, Transducer};
 use core::{
     marker::PhantomData,
     ops::{Add, Mul},
 };
-use typenum::{NonZero, Unsigned, Add1, Prod, B1};
-use generic_array::{GenericArray, ArrayLength};
+use generic_array::{ArrayLength, GenericArray};
+use typenum::{Add1, NonZero, Prod, Unsigned, B1};
 use ufix::Cast;
-use crate::{DelayLine, Transducer};
 
 /// FIR filter parameters
 ///
@@ -41,12 +41,13 @@ pub type State<L> = L;
 pub struct Filter<O, B, L>(PhantomData<(O, B, L)>);
 
 impl<O, B, L> Transducer for Filter<O, B, L>
-where B: Copy + Mul<L::Value>,
-      O: Cast<Prod<B, L::Value>> + Add<O, Output = O>,
-      L: DelayLine,
-      for<'a> &'a L: IntoIterator<Item = L::Value>,
-      L::Length: Add<B1>,
-      Add1<L::Length>: ArrayLength<B> + NonZero + Unsigned,
+where
+    B: Copy + Mul<L::Value>,
+    O: Cast<Prod<B, L::Value>> + Add<O, Output = O>,
+    L: DelayLine,
+    for<'a> &'a L: IntoIterator<Item = L::Value>,
+    L::Length: Add<B1>,
+    Add1<L::Length>: ArrayLength<B> + NonZero + Unsigned,
 {
     type Input = L::Value;
     type Output = O;
@@ -54,10 +55,13 @@ where B: Copy + Mul<L::Value>,
     type State = State<L>;
 
     fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output {
-        let result = param.iter().skip(1)
+        let result = param
+            .iter()
+            .skip(1)
             .zip(state.iter())
-            .fold(O::cast(param[0] * value),
-                  |accum, (b, x)| accum + O::cast(*b * x));
+            .fold(O::cast(param[0] * value), |accum, (b, x)| {
+                accum + O::cast(*b * x)
+            });
 
         state.push(value);
         result
@@ -66,10 +70,10 @@ where B: Copy + Mul<L::Value>,
 
 #[cfg(test)]
 mod test {
-    use crate::{pfdl::Store as DL};
-    use typenum::{P8, P16, U3};
-    use ufix::si;
     use super::*;
+    use crate::pfdl::Store as DL;
+    use typenum::{P16, P8, U3};
+    use ufix::si;
 
     #[test]
     fn fir_i8_n3() {
@@ -98,22 +102,56 @@ mod test {
         type O = si::Nano<P16>;
         type P = si::Milli<P8>;
 
-        let param = Param::<P, U3>::from([P::new(0_456), P::new(-0_137), P::new(0_702), P::new(-1_421)]);
+        let param =
+            Param::<P, U3>::from([P::new(0_456), P::new(-0_137), P::new(0_702), P::new(-1_421)]);
         let mut state = DL::from(I::new(0));
 
         type Filter1 = Filter<O, P, DL<I, U3>>;
 
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_000)), O::new(0_000));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(1_000)), O::new(456_000));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_000)), O::new(-137_000));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_000)), O::new(702_000));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_000)), O::new(-1_421_000));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_000)), O::new(0_000));
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_000)),
+            O::new(0_000)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(1_000)),
+            O::new(456_000)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_000)),
+            O::new(-137_000)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_000)),
+            O::new(702_000)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_000)),
+            O::new(-1_421_000)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_000)),
+            O::new(0_000)
+        );
 
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(0_123)), O::new(56_088));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(11_234)), O::new(5_105_853));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(5_001)), O::new(827_744));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(-3_120)), O::new(5_603_628));
-        assert_eq!(Filter1::apply(&param, &mut state, I::new(-8_998)), O::new(-16_128_460));
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(0_123)),
+            O::new(56_088)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(11_234)),
+            O::new(5_105_853)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(5_001)),
+            O::new(827_744)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(-3_120)),
+            O::new(5_603_628)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, I::new(-8_998)),
+            O::new(-16_128_460)
+        );
     }
 }

@@ -8,7 +8,9 @@ use typenum::Unsigned;
 /// [`Unsigned`]: ../typenum/marker_traits/trait.Unsigned.html
 pub trait FromUnsigned {
     /// Creates a value from a type.
-    fn from_unsigned<U>() -> Self where U: Unsigned;
+    fn from_unsigned<U>() -> Self
+    where
+        U: Unsigned;
 }
 
 macro_rules! from_unsigned {

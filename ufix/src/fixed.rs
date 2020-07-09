@@ -78,12 +78,12 @@ Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` 
 
  */
 
+use super::{BitsType, Cast, FromUnsigned, Pow};
 use core::{
     marker::PhantomData,
     ops::{Div, Mul, Sub},
 };
-use typenum::{Z0, Bit, Integer, Unsigned, AbsVal, Diff, Le, Abs, IsLess};
-use super::{BitsType, FromUnsigned, Pow, Cast};
+use typenum::{Abs, AbsVal, Bit, Diff, Integer, IsLess, Le, Unsigned, Z0};
 
 /**
 
@@ -149,7 +149,10 @@ where
     /// Kilo::<P2>::new(25); // 25 000
     /// ```
     pub fn new(bits: Bits::Type) -> Self {
-        Fix { bits, marker: PhantomData }
+        Fix {
+            bits,
+            marker: PhantomData,
+        }
     }
 
     /// Converts to another _Exp_.
@@ -159,7 +162,7 @@ where
         Base: Unsigned,
         Exp: Sub<ToExp>,
         Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-        AbsVal<Diff<Exp, ToExp>>: Integer
+        AbsVal<Diff<Exp, ToExp>>: Integer,
     {
         let base = Bits::Type::from_unsigned::<Base>();
         let diff = AbsVal::<Diff<Exp, ToExp>>::to_i32();
@@ -205,10 +208,14 @@ where
         Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
         Base: Unsigned,
         ToBits: BitsType<Base>,
-        ToBits::Type: FromUnsigned + Pow + Mul<Output = ToBits::Type> + Div<Output = ToBits::Type> + Cast<Bits::Type>,
+        ToBits::Type: FromUnsigned
+            + Pow
+            + Mul<Output = ToBits::Type>
+            + Div<Output = ToBits::Type>
+            + Cast<Bits::Type>,
         Exp: Sub<ToExp>,
         Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-        AbsVal<Diff<Exp, ToExp>>: Integer
+        AbsVal<Diff<Exp, ToExp>>: Integer,
     {
         if Le::<Bits, ToBits>::to_bool() {
             self.into_bits::<ToBits>().into_exp()

@@ -1,6 +1,6 @@
-use core::ops::{Mul, Div};
-use typenum::{Z0, Bit, Integer, Unsigned, AbsVal, Le, Abs, IsLess};
-use super::{FromUnsigned, BitsType, Pow, Fix, Cast};
+use super::{BitsType, Cast, Fix, FromUnsigned, Pow};
+use core::ops::{Div, Mul};
+use typenum::{Abs, AbsVal, Bit, Integer, IsLess, Le, Unsigned, Z0};
 
 macro_rules! from_num {
     ($TYPE: ty, $KIND: tt) => {

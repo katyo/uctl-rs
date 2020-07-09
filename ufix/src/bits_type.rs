@@ -1,6 +1,8 @@
 pub trait BitsType<Base> {
-    type Type;
+    type Type: Sized;
 }
+
+pub type TypeBits<Bits, Base> = <Bits as BitsType<Base>>::Type;
 
 macro_rules! bits_type {
     ( $($base: ident: $($type: ty: $($bits: ident)+),+;)+ ) => { $($($(
@@ -95,13 +97,11 @@ mod _128 {
     }
 }
 
-pub type TypeBits<Bits, Base> = <Bits as BitsType<Base>>::Type;
-
 #[cfg(test)]
 mod test {
     use super::TypeBits;
-    use typenum::*;
     use core::mem::size_of;
+    use typenum::*;
 
     type Bits2<T> = TypeBits<T, U2>;
 

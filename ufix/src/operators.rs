@@ -1,16 +1,18 @@
 // Allow due to unexpected behavior on it
 #![allow(clippy::type_repetition_in_bounds)]
 
-use core::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign, Add, Div, Mul, Neg, Rem, Sub};
-use typenum::{Diff, Sum, IsLess, Min, Max, Minimum, Maximum, Unsigned, Integer, Abs, AbsVal, Z0};
-use super::{Fix, BitsType, FromUnsigned, Pow, Cast};
+use super::{BitsType, Cast, Fix, FromUnsigned, Pow, TypeBits};
+use core::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
+};
+use typenum::{Abs, AbsVal, Diff, Integer, IsLess, Max, Maximum, Min, Minimum, Sum, Unsigned, Z0};
 
 // Arithmetic.
 
 impl<Bits, Base, Exp> Neg for Fix<Bits, Base, Exp>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: Neg<Output = Bits::Type>
+    Bits: BitsType<Base> + Integer,
+    Bits::Type: Neg<Output = Bits::Type>,
 {
     type Output = Self;
     fn neg(self) -> Self {
@@ -18,40 +20,62 @@ where
     }
 }
 
+type FixSumExp<LExp, RExp> = Minimum<LExp, RExp>;
+type FixSumBits<LBits, LExp, RBits, RExp> =
+    Sum<Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>, FixSumExp<LExp, RExp>>;
+type FixSum<LBits, LExp, Base, RBits, RExp> =
+    Fix<FixSumBits<LBits, LExp, RBits, RExp>, Base, FixSumExp<LExp, RExp>>;
+
 /// Fixed-point addition
 ///
 /// Fix<LBits, Base, LExp> + Fix<RBits, Base, RExp> = Fix<Maximum<LBits, RBits>, Base, Minimum<LExp, RExp>>
 ///
 impl<LBits, RBits, Base, LExp, RExp> Add<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
-    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
-
-    RBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>>,
-    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
-
-    Maximum<LBits, RBits>: BitsType<Base>,
-    <Maximum<LBits, RBits> as BitsType<Base>>::Type: FromUnsigned + Pow +
-        Cast<LBits::Type> + Cast<RBits::Type> +
-        Mul<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
-        Div<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
-        Add<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type>,
-
     Base: Unsigned,
 
-    LExp: Sub<Minimum<LExp, RExp>> + Min<RExp>,
-    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
+    LBits: BitsType<Base> + Sub<LExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
+    RBits: BitsType<Base> + Sub<RExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
 
-    RExp: Sub<Minimum<LExp, RExp>> + Min<LExp>,
+    LExp: Min<RExp> + Sub<Minimum<LExp, RExp>>,
+    RExp: Min<LExp> + Sub<Minimum<LExp, RExp>>,
+
+    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
+    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
+
+    Diff<LBits, LExp>: Max<Diff<RBits, RExp>>,
+    Diff<RBits, RExp>: Max<Diff<LBits, LExp>>,
+
+    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
     Diff<RExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
+
+    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
     AbsVal<Diff<RExp, Minimum<LExp, RExp>>>: Integer,
+
+    Maximum<Diff<RBits, RExp>, Diff<LBits, LExp>>: Add<Minimum<RExp, LExp>>,
+    Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>: Add<Minimum<LExp, RExp>>,
+
+    FixSumBits<LBits, LExp, RBits, RExp>: BitsType<Base>,
+    FixSumBits<RBits, RExp, LBits, LExp>: BitsType<Base>,
+
+    TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>: FromUnsigned
+        + Pow
+        + Cast<LBits::Type>
+        + Cast<RBits::Type>
+        + Add<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
+        + Mul<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
+        + Div<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>,
 {
-    type Output = Fix<Maximum<LBits, RBits>, Base, Minimum<LExp, RExp>>;
+    type Output = FixSum<LBits, LExp, Base, RBits, RExp>;
 
     fn add(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(self.convert::<Maximum<LBits, RBits>, Minimum<LExp, RExp>>().bits +
-                          rhs.convert::<Maximum<LBits, RBits>, Minimum<LExp, RExp>>().bits)
+        Self::Output::new(
+            self.convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
+                .bits
+                + rhs
+                    .convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
+                    .bits,
+        )
     }
 }
 
@@ -61,34 +85,50 @@ where
 ///
 impl<LBits, RBits, Base, LExp, RExp> Sub<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
 where
-    LBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>> + Max<RBits>,
-    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
-
-    RBits: BitsType<Base> + IsLess<Maximum<LBits, RBits>>,
-    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
-
-    Maximum<LBits, RBits>: BitsType<Base>,
-    <Maximum<LBits, RBits> as BitsType<Base>>::Type: FromUnsigned + Pow +
-        Cast<LBits::Type> + Cast<RBits::Type> +
-        Mul<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
-        Div<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type> +
-        Sub<Output = <Maximum<LBits, RBits> as BitsType<Base>>::Type>,
-
     Base: Unsigned,
 
-    LExp: Sub<Minimum<LExp, RExp>> + Min<RExp>,
-    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
+    LBits: BitsType<Base> + Sub<LExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
+    RBits: BitsType<Base> + Sub<RExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
 
-    RExp: Sub<Minimum<LExp, RExp>> + Min<LExp>,
+    LExp: Min<RExp> + Sub<Minimum<LExp, RExp>>,
+    RExp: Min<LExp> + Sub<Minimum<LExp, RExp>>,
+
+    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
+    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
+
+    Diff<LBits, LExp>: Max<Diff<RBits, RExp>>,
+    Diff<RBits, RExp>: Max<Diff<LBits, LExp>>,
+
+    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
     Diff<RExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
+
+    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
     AbsVal<Diff<RExp, Minimum<LExp, RExp>>>: Integer,
+
+    Maximum<Diff<RBits, RExp>, Diff<LBits, LExp>>: Add<Minimum<RExp, LExp>>,
+    Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>: Add<Minimum<LExp, RExp>>,
+
+    FixSumBits<LBits, LExp, RBits, RExp>: BitsType<Base>,
+    FixSumBits<RBits, RExp, LBits, LExp>: BitsType<Base>,
+
+    TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>: FromUnsigned
+        + Pow
+        + Cast<LBits::Type>
+        + Cast<RBits::Type>
+        + Sub<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
+        + Mul<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
+        + Div<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>,
 {
-    type Output = Fix<Maximum<LBits, RBits>, Base, Minimum<LExp, RExp>>;
+    type Output = FixSum<LBits, LExp, Base, RBits, RExp>;
 
     fn sub(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(self.convert::<Maximum<LBits, RBits>, Minimum<LExp, RExp>>().bits -
-                          rhs.convert::<Maximum<LBits, RBits>, Minimum<LExp, RExp>>().bits)
+        Self::Output::new(
+            self.convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
+                .bits
+                - rhs
+                    .convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
+                    .bits,
+        )
     }
 }
 
@@ -101,14 +141,17 @@ where
     LBits: BitsType<Base> + Add<RBits>,
     RBits: BitsType<Base>,
     Sum<LBits, RBits>: BitsType<Base>,
-    <Sum<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type> + Cast<RBits::Type> +
-      Mul<Output = <Sum<LBits, RBits> as BitsType<Base>>::Type>,
+    <Sum<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type>
+        + Cast<RBits::Type>
+        + Mul<Output = <Sum<LBits, RBits> as BitsType<Base>>::Type>,
     LExp: Add<RExp>,
 {
     type Output = Fix<Sum<LBits, RBits>, Base, Sum<LExp, RExp>>;
     fn mul(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(<Sum<LBits, RBits> as BitsType<Base>>::Type::cast(self.bits) *
-                          <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(rhs.bits))
+        Self::Output::new(
+            <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(self.bits)
+                * <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(rhs.bits),
+        )
     }
 }
 
@@ -127,9 +170,9 @@ where
 {
     type Output = Fix<Diff<LBits, RBits>, Base, Diff<LExp, RExp>>;
     fn div(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(
-            <Diff<LBits, RBits> as BitsType<Base>>::Type::cast(
-                self.bits / LBits::Type::cast(rhs.bits)))
+        Self::Output::new(<Diff<LBits, RBits> as BitsType<Base>>::Type::cast(
+            self.bits / LBits::Type::cast(rhs.bits),
+        ))
     }
 }
 
@@ -138,7 +181,7 @@ where
 impl<Bits, Base, Exp> Rem for Fix<Bits, Base, Exp>
 where
     Bits: BitsType<Base>,
-    Bits::Type: Rem<Output = Bits::Type>
+    Bits::Type: Rem<Output = Bits::Type>,
 {
     type Output = Self;
     fn rem(self, rhs: Self) -> Self {
@@ -244,7 +287,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::super::si::{Kilo, Milli, Unit};
+    use super::super::si::{Centi, Kilo, Milli, Unit};
     use typenum::*;
 
     #[test]
@@ -270,6 +313,10 @@ mod tests {
     #[test]
     fn add() {
         assert_eq!(Kilo::<P1>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
+        assert_eq!(
+            Centi::<P3>::new(0_30),
+            Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20)
+        );
     }
 
     #[test]
