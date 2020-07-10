@@ -32,10 +32,10 @@ be represented exactly in base-10. With `Fix`, we can choose the precision we wa
 at compile-time. In this case, hundredths of a dollar will do.
 
 ```
-use typenum::U3;
+use typenum::P3;
 use ufix::si::Centi; // Fix<_, U10, N2>
 
-assert_eq!(Centi::<U3>::new(0_30), Centi::<U3>::new(0_10) + Centi::<U3>::new(0_20));
+assert_eq!(Centi::<P3>::new(0_30), Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20));
 ```
 
 But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
@@ -78,12 +78,9 @@ Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` 
 
  */
 
-use super::{BitsType, Cast, FromUnsigned, Pow};
-use core::{
-    marker::PhantomData,
-    ops::{Div, Mul, Sub},
-};
-use typenum::{Abs, AbsVal, Bit, Diff, Integer, IsLess, Le, Unsigned, Z0};
+use super::{Cast, FromUnsigned, Mantissa, Positive, Radix, UnsignedPow};
+use core::marker::PhantomData;
+use typenum::Integer;
 
 /**
 
@@ -123,19 +120,22 @@ integers _Bits_, _Base_ and _Exp_, respectively.
  */
 #[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
-pub struct Fix<Bits, Base, Exp>
+pub struct Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
+    R: Radix<B>,
 {
-    /// The underlying integer.
-    pub bits: Bits::Type,
+    /// The real mantissa
+    pub bits: R::Type,
 
-    marker: PhantomData<(Base, Exp)>,
+    /// The phantom exponent
+    pub exp: PhantomData<E>,
 }
 
-impl<Bits, Base, Exp> Fix<Bits, Base, Exp>
+impl<R, B, E> Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
+    R: Radix<B>,
+    B: Positive,
+    E: Integer,
 {
     /// Creates a number.
     ///
@@ -148,31 +148,23 @@ where
     /// Milli::<P2>::new(25); // 0.025
     /// Kilo::<P2>::new(25); // 25 000
     /// ```
-    pub fn new(bits: Bits::Type) -> Self {
+    pub fn new(bits: R::Type) -> Self {
         Fix {
             bits,
-            marker: PhantomData,
+            exp: PhantomData,
         }
     }
 
     /// Converts to another _Exp_.
-    fn into_exp<ToExp>(self) -> Fix<Bits, Base, ToExp>
+    fn into_exp<Er>(self) -> Fix<R, B, Er>
     where
-        Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
-        Base: Unsigned,
-        Exp: Sub<ToExp>,
-        Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-        AbsVal<Diff<Exp, ToExp>>: Integer,
+        Er: Integer,
     {
-        let base = Bits::Type::from_unsigned::<Base>();
-        let diff = AbsVal::<Diff<Exp, ToExp>>::to_i32();
-        let inverse = Le::<Diff<Exp, ToExp>, Z0>::to_bool();
+        // radix^|exp-to_exp|
+        let ratio =
+            Mantissa::<R, B>::from_unsigned::<R>().unsigned_pow((E::I32 - Er::I32).abs() as u32);
 
-        // FIXME: Would like to do this with typenum::Pow, but that
-        // seems to result in overflow evaluating requirements.
-        let ratio = base.pow(diff as u32);
-
-        if inverse {
+        if E::I32 < Er::I32 {
             Fix::new(self.bits / ratio)
         } else {
             Fix::new(self.bits * ratio)
@@ -180,12 +172,13 @@ where
     }
 
     /// Convert to another _Bits_.
-    fn into_bits<ToBits>(self) -> Fix<ToBits, Base, Exp>
+    fn into_bits<Br>(self) -> Fix<R, Br, E>
     where
-        ToBits: BitsType<Base>,
-        ToBits::Type: Cast<Bits::Type>,
+        R: Radix<Br>,
+        Br: Positive,
+        Mantissa<R, Br>: Cast<Mantissa<R, B>>,
     {
-        Fix::new(ToBits::Type::cast(self.bits))
+        Fix::new(Mantissa::<R, Br>::cast(self.bits))
     }
 
     /// Converts to another _Bits_ and/or _Exp_.
@@ -202,25 +195,17 @@ where
     /// assert_eq!(kilo, milli.convert());
     /// assert_eq!(milli, kilo.convert());
     /// ```
-    pub fn convert<ToBits, ToExp>(self) -> Fix<ToBits, Base, ToExp>
+    pub fn convert<Br, Er>(self) -> Fix<R, Br, Er>
     where
-        Bits: IsLess<ToBits>,
-        Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
-        Base: Unsigned,
-        ToBits: BitsType<Base>,
-        ToBits::Type: FromUnsigned
-            + Pow
-            + Mul<Output = ToBits::Type>
-            + Div<Output = ToBits::Type>
-            + Cast<Bits::Type>,
-        Exp: Sub<ToExp>,
-        Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-        AbsVal<Diff<Exp, ToExp>>: Integer,
+        R: Radix<Br>,
+        Er: Integer,
+        Br: Positive,
+        Mantissa<R, Br>: Cast<Mantissa<R, B>>,
     {
-        if Le::<Bits, ToBits>::to_bool() {
-            self.into_bits::<ToBits>().into_exp()
+        if B::U32 < Br::U32 {
+            self.into_bits::<Br>().into_exp::<Er>()
         } else {
-            self.into_exp::<ToExp>().into_bits()
+            self.into_exp::<Er>().into_bits::<Br>()
         }
     }
 }

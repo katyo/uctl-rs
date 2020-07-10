@@ -1,18 +1,20 @@
 // Allow due to unexpected behavior on it
 #![allow(clippy::type_repetition_in_bounds)]
 
-use super::{BitsType, Cast, Fix, FromUnsigned, Pow, TypeBits};
+use super::{Cast, Fix, Mantissa, Positive, Radix};
 use core::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
-use typenum::{Abs, AbsVal, Diff, Integer, IsLess, Max, Maximum, Min, Minimum, Sum, Unsigned, Z0};
+use typenum::{Diff, Integer, Max, Maximum, Min, Minimum, Sum};
 
 // Arithmetic.
 
-impl<Bits, Base, Exp> Neg for Fix<Bits, Base, Exp>
+impl<R, B, E> Neg for Fix<R, B, E>
 where
-    Bits: BitsType<Base> + Integer,
-    Bits::Type: Neg<Output = Bits::Type>,
+    R: Radix<B>,
+    B: Positive,
+    E: Integer,
+    Mantissa<R, B>: Neg<Output = Mantissa<R, B>>,
 {
     type Output = Self;
     fn neg(self) -> Self {
@@ -20,168 +22,140 @@ where
     }
 }
 
-type FixSumExp<LExp, RExp> = Minimum<LExp, RExp>;
-type FixSumBits<LBits, LExp, RBits, RExp> =
-    Sum<Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>, FixSumExp<LExp, RExp>>;
-type FixSum<LBits, LExp, Base, RBits, RExp> =
-    Fix<FixSumBits<LBits, LExp, RBits, RExp>, Base, FixSumExp<LExp, RExp>>;
+type SumE<E1, E2> = Minimum<E1, E2>;
+type SumB<B1, E1, B2, E2> = Diff<Maximum<Sum<B1, E1>, Sum<B2, E2>>, SumE<E1, E2>>;
+type SumT<R, B1, E1, B2, E2> = Fix<R, SumB<B1, E1, B2, E2>, SumE<E1, E2>>;
 
 /// Fixed-point addition
 ///
-/// Fix<LBits, Base, LExp> + Fix<RBits, Base, RExp> = Fix<Maximum<LBits, RBits>, Base, Minimum<LExp, RExp>>
+/// Fix<R, B1, E1> + Fix<R, B2, E2> = Fix<R, max(B1 + E1, B2 + E2) - min(E1, E2), min(E1, E2)>
 ///
-impl<LBits, RBits, Base, LExp, RExp> Add<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
+/// BFix<32, -16> (Q16.16) + BFix<32, -24> (Q8.24) = BFix<40, -24> (Q40.24)
+/// BFix<32, 16> + BFix<32, 8> = BFix<40, 8>
+///
+impl<R, B1, E1, B2, E2> Add<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
-    Base: Unsigned,
-
-    LBits: BitsType<Base> + Sub<LExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
-    RBits: BitsType<Base> + Sub<RExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
-
-    LExp: Min<RExp> + Sub<Minimum<LExp, RExp>>,
-    RExp: Min<LExp> + Sub<Minimum<LExp, RExp>>,
-
-    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
-    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
-
-    Diff<LBits, LExp>: Max<Diff<RBits, RExp>>,
-    Diff<RBits, RExp>: Max<Diff<LBits, LExp>>,
-
-    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-    Diff<RExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-
-    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
-    AbsVal<Diff<RExp, Minimum<LExp, RExp>>>: Integer,
-
-    Maximum<Diff<RBits, RExp>, Diff<LBits, LExp>>: Add<Minimum<RExp, LExp>>,
-    Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>: Add<Minimum<LExp, RExp>>,
-
-    FixSumBits<LBits, LExp, RBits, RExp>: BitsType<Base>,
-    FixSumBits<RBits, RExp, LBits, LExp>: BitsType<Base>,
-
-    TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>: FromUnsigned
-        + Pow
-        + Cast<LBits::Type>
-        + Cast<RBits::Type>
-        + Add<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
-        + Mul<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
-        + Div<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>,
+    R: Radix<B1> + Radix<B2> + Radix<SumB<B1, E1, B2, E2>>,
+    B1: Positive + Add<E1>,
+    E1: Integer + Min<E2>,
+    B2: Positive + Add<E2>,
+    E2: Integer,
+    Sum<B1, E1>: Max<Sum<B2, E2>>,
+    SumB<B1, E1, B2, E2>: Positive,
+    SumE<E1, E2>: Integer,
+    Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
+    Mantissa<R, SumB<B1, E1, B2, E2>>: Cast<Mantissa<R, B1>>
+        + Cast<Mantissa<R, B2>>
+        + Add<Output = Mantissa<R, SumB<B1, E1, B2, E2>>>,
 {
-    type Output = FixSum<LBits, LExp, Base, RBits, RExp>;
+    type Output = SumT<R, B1, E1, B2, E2>;
 
-    fn add(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(
-            self.convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
-                .bits
-                + rhs
-                    .convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
-                    .bits,
-        )
+    fn add(self, other: Fix<R, B2, E2>) -> Self::Output {
+        let a: SumT<R, B1, E1, B2, E2> = self.convert();
+        let b: SumT<R, B1, E1, B2, E2> = other.convert();
+
+        Self::Output::new(a.bits + b.bits)
     }
 }
 
 /// Fixed-point substraction
 ///
-/// Fix<LBits, Base, LExp> - Fix<RBits, Base, RExp> = Fix<Maximum<LBits, RBits>, Base, Minimum<LExp, RExp>>
+/// Fix<R, B1, E1> - Fix<R, B2, E2> = Fix<R, max(B1 + E1, B2 + E2) - min(E1, E2), min(E1, E2)>
 ///
-impl<LBits, RBits, Base, LExp, RExp> Sub<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
+impl<R, B1, E1, B2, E2> Sub<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
-    Base: Unsigned,
-
-    LBits: BitsType<Base> + Sub<LExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
-    RBits: BitsType<Base> + Sub<RExp> + IsLess<FixSumBits<LBits, LExp, RBits, RExp>>,
-
-    LExp: Min<RExp> + Sub<Minimum<LExp, RExp>>,
-    RExp: Min<LExp> + Sub<Minimum<LExp, RExp>>,
-
-    LBits::Type: FromUnsigned + Pow + Mul<Output = LBits::Type> + Div<Output = LBits::Type>,
-    RBits::Type: FromUnsigned + Pow + Mul<Output = RBits::Type> + Div<Output = RBits::Type>,
-
-    Diff<LBits, LExp>: Max<Diff<RBits, RExp>>,
-    Diff<RBits, RExp>: Max<Diff<LBits, LExp>>,
-
-    Diff<LExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-    Diff<RExp, Minimum<LExp, RExp>>: Abs + IsLess<Z0>,
-
-    AbsVal<Diff<LExp, Minimum<LExp, RExp>>>: Integer,
-    AbsVal<Diff<RExp, Minimum<LExp, RExp>>>: Integer,
-
-    Maximum<Diff<RBits, RExp>, Diff<LBits, LExp>>: Add<Minimum<RExp, LExp>>,
-    Maximum<Diff<LBits, LExp>, Diff<RBits, RExp>>: Add<Minimum<LExp, RExp>>,
-
-    FixSumBits<LBits, LExp, RBits, RExp>: BitsType<Base>,
-    FixSumBits<RBits, RExp, LBits, LExp>: BitsType<Base>,
-
-    TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>: FromUnsigned
-        + Pow
-        + Cast<LBits::Type>
-        + Cast<RBits::Type>
-        + Sub<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
-        + Mul<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>
-        + Div<Output = TypeBits<FixSumBits<LBits, LExp, RBits, RExp>, Base>>,
+    R: Radix<B1> + Radix<B2> + Radix<SumB<B1, E1, B2, E2>>,
+    B1: Positive + Add<E1>,
+    E1: Integer + Min<E2>,
+    B2: Positive + Add<E2>,
+    E2: Integer,
+    Sum<B1, E1>: Max<Sum<B2, E2>>,
+    SumB<B1, E1, B2, E2>: Positive,
+    SumE<E1, E2>: Integer,
+    Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
+    Mantissa<R, SumB<B1, E1, B2, E2>>: Cast<Mantissa<R, B1>>
+        + Cast<Mantissa<R, B2>>
+        + Sub<Output = Mantissa<R, SumB<B1, E1, B2, E2>>>,
 {
-    type Output = FixSum<LBits, LExp, Base, RBits, RExp>;
+    type Output = SumT<R, B1, E1, B2, E2>;
 
-    fn sub(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(
-            self.convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
-                .bits
-                - rhs
-                    .convert::<FixSumBits<LBits, LExp, RBits, RExp>, FixSumExp<LExp, RExp>>()
-                    .bits,
-        )
+    fn sub(self, other: Fix<R, B2, E2>) -> Self::Output {
+        let a: SumT<R, B1, E1, B2, E2> = self.convert();
+        let b: SumT<R, B1, E1, B2, E2> = other.convert();
+
+        Self::Output::new(a.bits - b.bits)
     }
 }
+
+type ProdB<B1, B2> = Sum<B1, B2>;
+type ProdE<E1, E2> = Sum<E1, E2>;
+type ProdM<R, B1, B2> = Mantissa<R, ProdB<B1, B2>>;
+type ProdT<R, B1, E1, B2, E2> = Fix<R, ProdB<B1, B2>, ProdE<E1, E2>>;
 
 /// Fixed-point multiplication
 ///
-/// Fix<LBits, Base, LExp> * Fix<RBits, Base, RExp> = Fix<LBits + RBits, Base, LExp + RExp>
+/// Fix<R, B1, E1> * Fix<R, B2, E2> = Fix<R, B1 + B2, E1 + E2>
 ///
-impl<LBits, RBits, Base, LExp, RExp> Mul<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
+impl<R, B1, E1, B2, E2> Mul<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
-    LBits: BitsType<Base> + Add<RBits>,
-    RBits: BitsType<Base>,
-    Sum<LBits, RBits>: BitsType<Base>,
-    <Sum<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type>
-        + Cast<RBits::Type>
-        + Mul<Output = <Sum<LBits, RBits> as BitsType<Base>>::Type>,
-    LExp: Add<RExp>,
+    R: Radix<B1> + Radix<B2> + Radix<ProdB<B1, B2>>,
+    B1: Positive + Add<B2>,
+    E1: Integer + Add<E2>,
+    B2: Positive,
+    E2: Integer,
+    ProdB<B1, B2>: Positive,
+    ProdE<E1, E2>: Integer,
+    ProdM<R, B1, B2>:
+        Cast<Mantissa<R, B1>> + Cast<Mantissa<R, B2>> + Mul<Output = ProdM<R, B1, B2>>,
 {
-    type Output = Fix<Sum<LBits, RBits>, Base, Sum<LExp, RExp>>;
-    fn mul(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(
-            <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(self.bits)
-                * <Sum<LBits, RBits> as BitsType<Base>>::Type::cast(rhs.bits),
-        )
+    type Output = ProdT<R, B1, E1, B2, E2>;
+    fn mul(self, other: Fix<R, B2, E2>) -> Self::Output {
+        let a = ProdM::<R, B1, B2>::cast(self.bits);
+        let b = ProdM::<R, B1, B2>::cast(other.bits);
+
+        Self::Output::new(a * b)
     }
 }
 
+type QuotB<B1, B2> = Diff<B1, B2>;
+type QuotE<E1, E2> = Diff<E1, E2>;
+type QuotM<R, B1, B2> = Mantissa<R, QuotB<B1, B2>>;
+type QuotT<R, B1, E1, B2, E2> = Fix<R, QuotB<B1, B2>, QuotE<E1, E2>>;
+
 /// Fixed-point division
 ///
-/// Fix<LBits, Base, LExp> / Fix<RBits, Base, RExp> = Fix<LBits - RBits, Base, LExp - RExp>
+/// Fix<R, B1, E1> / Fix<R, B2, E2> = Fix<R, B1 - B2, Base, E1 - E2>
 ///
-impl<LBits, RBits, Base, LExp, RExp> Div<Fix<RBits, Base, RExp>> for Fix<LBits, Base, LExp>
+impl<R, B1, E1, B2, E2> Div<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
-    LBits: BitsType<Base> + Sub<RBits>,
-    RBits: BitsType<Base>,
-    Diff<LBits, RBits>: BitsType<Base>,
-    LBits::Type: Cast<RBits::Type> + Div<Output = LBits::Type>,
-    LExp: Sub<RExp>,
-    <Diff<LBits, RBits> as BitsType<Base>>::Type: Cast<LBits::Type>,
+    R: Radix<B1> + Radix<B2> + Radix<QuotB<B1, B2>>,
+    B1: Positive + Sub<B2>,
+    E1: Integer + Sub<E2>,
+    B2: Positive,
+    E2: Integer,
+    QuotB<B1, B2>: Positive,
+    QuotE<E1, E2>: Integer,
+    QuotM<R, B1, B2>: Cast<Mantissa<R, B1>>,
+    Mantissa<R, B1>: Cast<Mantissa<R, B2>> + Div<Output = Mantissa<R, B1>>,
 {
-    type Output = Fix<Diff<LBits, RBits>, Base, Diff<LExp, RExp>>;
-    fn div(self, rhs: Fix<RBits, Base, RExp>) -> Self::Output {
-        Self::Output::new(<Diff<LBits, RBits> as BitsType<Base>>::Type::cast(
-            self.bits / LBits::Type::cast(rhs.bits),
-        ))
+    type Output = QuotT<R, B1, E1, B2, E2>;
+    fn div(self, other: Fix<R, B2, E2>) -> Self::Output {
+        let a = self.bits;
+        let b = Mantissa::<R, B1>::cast(other.bits);
+        let c = QuotM::<R, B1, B2>::cast(a / b);
+
+        Self::Output::new(c)
     }
 }
 
 /// Fixed-point reminder
 ///
-impl<Bits, Base, Exp> Rem for Fix<Bits, Base, Exp>
+impl<R, B, E> Rem for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: Rem<Output = Bits::Type>,
+    R: Radix<B>,
+    B: Positive,
+    E: Integer,
+    Mantissa<R, B>: Rem<Output = Mantissa<R, B>>,
 {
     type Output = Self;
     fn rem(self, rhs: Self) -> Self {
@@ -189,101 +163,61 @@ where
     }
 }
 
-/*
-impl<Type, Bits, Base, Exp> Mul<Type> for Fix<Bits, Base, Exp>
-where
-    Bits: BitsType,
-    Bits::Type: Mul<Bits::Type, Output = Bits::Type>
-{
-    type Output = Self;
-    fn mul(self, rhs: Bits::Type) -> Self {
-        Self::new(self.bits * rhs)
-    }
-}
-
-impl<Bits, Base, Exp> Div<<Bits as BitsType>::Type> for Fix<Bits, Base, Exp>
-where
-    Bits: BitsType,
-    Bits::Type: Div<Output = Bits::Type>
-{
-    type Output = Self;
-    fn div(self, rhs: Bits) -> Self {
-        Self::new(self.bits / rhs)
-    }
-}
-
-impl<Bits, Base, Exp> Rem<Bits> for Fix<Bits, Base, Exp>
-where Bits: Rem<Output = Bits> {
-    type Output = Self;
-    fn rem(self, rhs: Bits) -> Self {
-        Self::new(self.bits % rhs)
-    }
-}
-*/
-
 // Assignment.
 
-impl<Bits, Base, Exp> AddAssign for Fix<Bits, Base, Exp>
+impl<R, B, E, T> AddAssign<T> for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: AddAssign,
+    R: Radix<B>,
+    Mantissa<R, B>: AddAssign,
+    Fix<R, B, E>: Cast<T>,
 {
-    fn add_assign(&mut self, rhs: Self) {
-        self.bits += rhs.bits;
+    fn add_assign(&mut self, other: T) {
+        let b = Fix::<R, B, E>::cast(other);
+        self.bits += b.bits;
     }
 }
 
-impl<Bits, Base, Exp> SubAssign for Fix<Bits, Base, Exp>
+impl<R, B, E, T> SubAssign<T> for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: SubAssign,
+    R: Radix<B>,
+    Mantissa<R, B>: SubAssign,
+    Fix<R, B, E>: Cast<T>,
 {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.bits -= rhs.bits;
+    fn sub_assign(&mut self, other: T) {
+        let b = Fix::<R, B, E>::cast(other);
+        self.bits -= b.bits;
     }
 }
 
-impl<Type, Bits, Base, Exp> MulAssign<Type> for Fix<Bits, Base, Exp>
+impl<R, B, E, T> MulAssign<T> for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: MulAssign<Type>,
+    R: Radix<B>,
+    Mantissa<R, B>: MulAssign<T>,
 {
-    fn mul_assign(&mut self, rhs: Type) {
-        self.bits *= rhs;
+    fn mul_assign(&mut self, other: T) {
+        self.bits *= other;
     }
 }
 
-impl<Type, Bits, Base, Exp> DivAssign<Type> for Fix<Bits, Base, Exp>
+impl<R, B, E, T> DivAssign<T> for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: DivAssign<Type>,
+    R: Radix<B>,
+    Mantissa<R, B>: DivAssign<T>,
 {
-    fn div_assign(&mut self, rhs: Type) {
-        self.bits /= rhs;
+    fn div_assign(&mut self, other: T) {
+        self.bits /= other;
     }
 }
 
-impl<Bits, Base, LExp, RExp> RemAssign<Fix<Bits, Base, RExp>> for Fix<Bits, Base, LExp>
+impl<R, B, E1, E2> RemAssign<Fix<R, B, E2>> for Fix<R, B, E1>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: RemAssign<Bits::Type>,
+    R: Radix<B>,
+    Mantissa<R, B>: RemAssign,
 {
-    fn rem_assign(&mut self, rhs: Fix<Bits, Base, RExp>) {
-        self.bits %= rhs.bits;
+    fn rem_assign(&mut self, other: Fix<R, B, E2>) {
+        self.bits %= other.bits;
     }
 }
-
-/*
-impl<Type, Bits, Base, Exp> RemAssign<Type> for Fix<Bits, Base, Exp>
-where
-    Bits: BitsType,
-    Bits::Type: RemAssign<Type>,
-{
-    fn rem_assign(&mut self, rhs: Type) {
-        self.bits %= rhs;
-    }
-}
-*/
 
 #[cfg(test)]
 mod tests {
@@ -301,17 +235,24 @@ mod tests {
     }
 
     #[test]
-    fn cmp() {
+    fn cmp_unsigned() {
         assert!(Kilo::<U1>::new(1) < Kilo::new(2));
     }
 
     #[test]
-    fn neg() {
-        assert_eq!(Kilo::<P1>::new(-1), -Kilo::new(1));
+    fn cmp_signed() {
+        assert!(Kilo::<P1>::new(1) < Kilo::new(2));
+        assert!(Kilo::<P1>::new(-2) < Kilo::new(-1));
     }
 
     #[test]
-    fn add() {
+    fn neg_signed() {
+        assert_eq!(-Kilo::<P1>::new(1), Kilo::new(-1));
+        assert_eq!(-Kilo::<P1>::new(-1), Kilo::new(1));
+    }
+
+    #[test]
+    fn add_signed() {
         assert_eq!(Kilo::<P1>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
         assert_eq!(
             Centi::<P3>::new(0_30),
@@ -319,84 +260,67 @@ mod tests {
         );
     }
 
+    /*#[test]
+    fn add_unsigned() {
+        assert_eq!(Kilo::<U1>::new(1) + Kilo::<U1>::new(2), Kilo::<U1>::new(3));
+        assert_eq!(
+            Centi::<P3>::new(0_10) + Centi::<U3>::new(0_20),
+            Centi::<P3>::new(0_30)
+        );
+    }*/
+
     #[test]
-    fn sub() {
+    fn sub_signed() {
         assert_eq!(Kilo::<P1>::new(1), Kilo::<P1>::new(3) - Kilo::<P1>::new(2));
     }
 
     #[test]
-    fn mul() {
+    fn mul_signed() {
         assert_eq!(Unit::new(6), Kilo::<P1>::new(2) * Milli::<P1>::new(3));
     }
 
     #[test]
-    fn div() {
+    fn div_signed() {
         assert_eq!(Unit::new(3), Kilo::<P2>::new(6) / Kilo::<P1>::new(2));
     }
 
     #[test]
-    fn rem() {
+    fn rem_signed() {
         assert_eq!(Kilo::<P1>::new(1), Kilo::new(6) % Kilo::new(5));
     }
 
-    /*
     #[test]
-    fn mul_bits() {
-        assert_eq!(Kilo::new(6), Kilo::new(2) * 3);
-    }
-
-    #[test]
-    fn div_bits() {
-        assert_eq!(Kilo::new(3), Kilo::new(6) / 2);
-    }
-
-    #[test]
-    fn rem_bits() {
-        assert_eq!(Kilo::new(1), Kilo::new(6) % 5);
-    }
-     */
-
-    #[test]
-    fn add_assign() {
+    fn add_assign_signed() {
         let mut a = Kilo::<P5>::new(1);
-        a += Kilo::new(2);
+        a += Kilo::<P5>::new(2);
         assert_eq!(Kilo::new(3), a);
     }
 
     #[test]
-    fn sub_assign() {
+    fn sub_assign_signed() {
         let mut a = Kilo::<U5>::new(3);
-        a -= Kilo::new(2);
+        a -= Kilo::<U5>::new(2);
         assert_eq!(Kilo::new(1), a);
     }
 
     #[test]
-    fn mul_assign_bits() {
+    fn mul_assign_signed_bits() {
         let mut a = Kilo::<P5>::new(2);
         a *= 3;
         assert_eq!(Kilo::new(6), a);
     }
 
     #[test]
-    fn div_assign_bits() {
+    fn div_assign_signed_bits() {
         let mut a = Kilo::<P9>::new(6);
         a /= 2;
         assert_eq!(Kilo::new(3), a);
     }
 
     #[test]
-    fn rem_assign() {
+    fn rem_assign_signed() {
         let mut a = Kilo::<P9>::new(6);
         a %= Milli::new(5);
         assert_eq!(Kilo::new(1), a);
     }
-
-    /*
-    #[test]
-    fn rem_assign_bits() {
-        let mut a = Kilo::new(6);
-        a %= 5;
-        assert_eq!(Kilo::new(1), a);
-    }
-     */
 }

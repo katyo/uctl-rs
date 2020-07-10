@@ -4,14 +4,14 @@
 /// library?
 pub trait UnsignedPow {
     /// Raises `self` to the power of `exp`.
-    fn pow(self, exp: u32) -> Self;
+    fn unsigned_pow(self, exp: u32) -> Self;
 }
 
 macro_rules! unsigned_pow {
     ($TYPE: ty) => {
         impl UnsignedPow for $TYPE {
             #[inline]
-            fn pow(self, exp: u32) -> Self {
+            fn unsigned_pow(self, exp: u32) -> Self {
                 self.pow(exp)
             }
         }

@@ -1,15 +1,15 @@
-use super::{BitsType, Fix};
+use super::{Fix, Mantissa, Positive, Radix};
 use core::fmt::{Debug, Error, Formatter};
-use typenum::{Integer, Unsigned};
+use typenum::Integer;
 
-impl<Bits, Base, Exp> Debug for Fix<Bits, Base, Exp>
+impl<R, B, E> Debug for Fix<R, B, E>
 where
-    Bits: BitsType<Base>,
-    Bits::Type: Debug,
-    Base: Unsigned,
-    Exp: Integer,
+    R: Radix<B>,
+    B: Positive,
+    E: Integer,
+    Mantissa<R, B>: Debug,
 {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "{:?}x{}^{}", self.bits, Base::to_u64(), Exp::to_i64())
+        write!(f, "{:?}[{}]x{}^{}", self.bits, B::U32, R::U32, E::I32)
     }
 }

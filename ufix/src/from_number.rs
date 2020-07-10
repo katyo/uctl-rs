@@ -1,34 +1,24 @@
-use super::{BitsType, Cast, Fix, FromUnsigned, Pow};
-use core::ops::{Div, Mul};
-use typenum::{Abs, AbsVal, Bit, Integer, IsLess, Le, Unsigned, Z0};
+use super::{Cast, Fix, FromUnsigned, Mantissa, Positive, Radix, UnsignedPow};
+use typenum::Integer;
 
 macro_rules! from_num {
     ($TYPE: ty, $KIND: tt) => {
-        impl<Bits, Base, Exp> From<$TYPE> for Fix<Bits, Base, Exp>
+        impl<R, B, E> From<$TYPE> for Fix<R, B, E>
         where
-            $TYPE: Cast<Bits::Type>,
-            Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned + Pow + Cast<$TYPE> + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
-            Base: Unsigned,
-            Z0: IsLess<Exp>,
-            Exp: Abs,
-            AbsVal<Exp>: Integer,
+            R: Radix<B>,
+            B: Positive,
+            E: Integer,
+            $TYPE: Cast<Mantissa<R, B>>,
+            Mantissa<R, B>: Cast<$TYPE>,
         {
             fn from(value: $TYPE) -> Self {
-                let base = Bits::Type::from_unsigned::<Base>(); // e
-                let abs_exp = AbsVal::<Exp>::to_i32() as u32; // |exp|
-                let exp_pos = Le::<Z0, Exp>::to_bool(); // 0 < exp
-
-                // FIXME: Would like to do this with typenum::Pow, but that
-                // seems to result in overflow evaluating requirements.
-                let ratio = base.pow(abs_exp); // base^|exp|
-
+                // radix^|exp|
+                let ratio = Mantissa::<R, B>::from_unsigned::<R>().unsigned_pow(E::I32.abs() as u32);
                 // TODO: Add rounding
-
-                Self::new(if exp_pos {
-                    from_num!(@$KIND, /, $TYPE, Bits::Type, value, ratio)
+                Self::new(if 0 < E::I32 {
+                    from_num!(@$KIND, /, $TYPE, Mantissa<R, B>, value, ratio)
                 } else {
-                    from_num!(@$KIND, *, $TYPE, Bits::Type, value, ratio)
+                    from_num!(@$KIND, *, $TYPE, Mantissa<R, B>, value, ratio)
                 })
             }
         }

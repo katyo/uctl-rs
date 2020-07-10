@@ -1,43 +1,29 @@
-use crate::{BitsType, Cast, Fix, FromUnsigned, Pow};
-use core::ops::{Div, Mul, Sub};
-use typenum::{Abs, AbsVal, Diff, Integer, IsLess, Unsigned, Z0};
+use crate::{Cast, Fix, Mantissa, Positive, Radix};
+use typenum::Integer;
 
 macro_rules! cast_from {
     ($type: ty) => {
-        impl<Bits, Base, Exp> Cast<$type> for Fix<Bits, Base, Exp>
+        impl<R, B, E> Cast<$type> for Fix<R, B, E>
         where
-            $type: Cast<Bits::Type>,
-            Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned
-                + Pow
-                + Cast<$type>
-                + Mul<Bits::Type, Output = Bits::Type>
-                + Div<Bits::Type, Output = Bits::Type>,
-            Base: Unsigned,
-            Z0: IsLess<Exp>,
-            Exp: Abs,
-            AbsVal<Exp>: Integer,
+            R: Radix<B>,
+            B: Positive,
+            E: Integer,
+            $type: Cast<Mantissa<R, B>>,
+            Mantissa<R, B>: Cast<$type>,
         {
             fn cast(value: $type) -> Self {
                 Self::from(value)
             }
         }
 
-        impl<Bits, Base, Exp> Cast<Fix<Bits, Base, Exp>> for $type
+        impl<R, B, E> Cast<Fix<R, B, E>> for $type
         where
-            $type: Cast<Bits::Type>,
-            Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned
-                + Pow
-                + Cast<$type>
-                + Mul<Bits::Type, Output = Bits::Type>
-                + Div<Bits::Type, Output = Bits::Type>,
-            Base: Unsigned,
-            Z0: IsLess<Exp>,
-            Exp: Abs,
-            AbsVal<Exp>: Integer,
+            R: Radix<B>,
+            B: Positive,
+            E: Integer,
+            $type: Cast<Mantissa<R, B>>,
         {
-            fn cast(val: Fix<Bits, Base, Exp>) -> $type {
+            fn cast(val: Fix<R, B, E>) -> $type {
                 val.into()
             }
         }
@@ -61,22 +47,16 @@ cast_from!(i128);
 cast_from!(f32);
 cast_from!(f64);
 
-impl<Bits, ToBits, Base, Exp, ToExp> Cast<Fix<Bits, Base, Exp>> for Fix<ToBits, Base, ToExp>
+impl<R, B, Br, E, Er> Cast<Fix<R, B, E>> for Fix<R, Br, Er>
 where
-    Bits: BitsType<Base> + IsLess<ToBits>,
-    Bits::Type: FromUnsigned + Pow + Mul<Output = Bits::Type> + Div<Output = Bits::Type>,
-    ToBits: BitsType<Base>,
-    ToBits::Type: FromUnsigned
-        + Pow
-        + Mul<Output = ToBits::Type>
-        + Div<Output = ToBits::Type>
-        + Cast<Bits::Type>,
-    Base: Unsigned,
-    Exp: Sub<ToExp>,
-    Diff<Exp, ToExp>: Abs + IsLess<Z0>,
-    AbsVal<Diff<Exp, ToExp>>: Integer,
+    R: Radix<B> + Radix<Br>,
+    B: Positive,
+    Br: Positive,
+    E: Integer,
+    Er: Integer,
+    Mantissa<R, Br>: Cast<Mantissa<R, B>>,
 {
-    fn cast(value: Fix<Bits, Base, Exp>) -> Self {
+    fn cast(value: Fix<R, B, E>) -> Self {
         value.convert()
     }
 }

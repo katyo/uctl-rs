@@ -1,32 +1,22 @@
-use super::{BitsType, Cast, Fix, FromUnsigned, Pow};
-use core::ops::{Div, Mul};
-use typenum::{Abs, AbsVal, Bit, Integer, IsLess, Le, Unsigned, Z0};
+use super::{Cast, Fix, FromUnsigned, Mantissa, Positive, Radix, UnsignedPow};
+use typenum::Integer;
 
 macro_rules! into_num {
     ($TYPE: ty, $KIND: tt) => {
-        impl<Bits, Base, Exp> From<Fix<Bits, Base, Exp>> for $TYPE
+        impl<R, B, E> From<Fix<R, B, E>> for $TYPE
         where
-            $TYPE: Cast<Bits::Type>,
-            Bits: BitsType<Base>,
-            Bits::Type: FromUnsigned + Pow + Mul<Bits::Type, Output = Bits::Type> + Div<Bits::Type, Output = Bits::Type>,
-            Base: Unsigned,
-            Z0: IsLess<Exp>,
-            Exp: Abs,
-            AbsVal<Exp>: Integer,
+            R: Radix<B>,
+            B: Positive,
+            E: Integer,
+            $TYPE: Cast<Mantissa<R, B>>,
         {
-            fn from(value: Fix<Bits, Base, Exp>) -> Self {
-                let base = Bits::Type::from_unsigned::<Base>(); // e
-                let abs_exp = AbsVal::<Exp>::to_i32() as u32; // |exp|
-                let exp_pos = Le::<Z0, Exp>::to_bool(); // 0 < exp
-
-                // FIXME: Would like to do this with typenum::Pow, but that
-                // seems to result in overflow evaluating requirements.
-                let ratio = base.pow(abs_exp); // base^|exp|
-                let value = value.bits;
+            fn from(Fix { bits: value, .. }: Fix<R, B, E>) -> Self {
+                // radix^|exp|
+                let ratio = Mantissa::<R, B>::from_unsigned::<R>().unsigned_pow(E::I32.abs() as u32);
 
                 // TODO: Add rounding
 
-                if exp_pos {
+                if 0 < E::I32 {
                     into_num!(@$KIND, *, $TYPE, value, ratio)
                 } else {
                     into_num!(@$KIND, /, $TYPE, value, ratio)

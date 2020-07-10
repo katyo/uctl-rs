@@ -1,12 +1,24 @@
-pub trait BitsType<Base> {
-    type Type: Sized;
+use crate::{FromUnsigned, UnsignedPow};
+use core::ops::{Div, Mul};
+use typenum::Unsigned;
+
+/// The trait which infers type for store the value according to given radix parameter
+pub trait Radix<B>
+where
+    Self: Unsigned,
+{
+    type Type: Sized
+        + FromUnsigned
+        + UnsignedPow
+        + Mul<Output = Self::Type>
+        + Div<Output = Self::Type>;
 }
 
-pub type TypeBits<Bits, Base> = <Bits as BitsType<Base>>::Type;
+pub type Mantissa<R, B> = <R as Radix<B>>::Type;
 
-macro_rules! bits_type {
-    ( $($base: ident: $($type: ty: $($bits: ident)+),+;)+ ) => { $($($(
-        impl BitsType<typenum::$base> for typenum::$bits {
+macro_rules! radix_impl {
+    ( $($radix: ident: $($type: ty: $($width: ident)+),+;)+ ) => { $($($(
+        impl Radix<typenum::$width> for typenum::$radix {
             type Type = $type;
         }
     )+)+)+ };
@@ -52,7 +64,7 @@ mod _64 {
     pub type I = i64;
 }
 
-bits_type! {
+radix_impl! {
     U2:
     _8::U: U1 U2 U3 U4 U5 U6 U7 U8,
     _8::I: P1 P2 P3 P4 P5 P6 P7 P8,
@@ -77,14 +89,14 @@ bits_type! {
 // 128
 #[cfg(feature = "i128")]
 mod _128 {
-    use super::BitsType;
+    use super::Radix;
 
     mod _128 {
         pub type U = u128;
         pub type I = i128;
     }
 
-    bits_type! {
+    radix_impl! {
         U2:
         _128::U: U65 U66 U67 U68 U69 U70 U71 U72 U73 U74 U75 U76 U77 U78 U79 U80 U81 U82 U83 U84 U85 U86 U87 U88 U89 U90 U91 U92 U93 U94 U95 U96 U97 U98 U99 U100 U101 U102 U103 U104 U105 U106 U107 U108 U109 U110 U111 U112 U113 U114 U115 U116 U117 U118 U119 U120 U121 U122 U123 U124 U125 U126 U127 U128,
         _128::I: P65 P66 P67 P68 P69 P70 P71 P72 P73 P74 P75 P76 P77 P78 P79 P80 P81 P82 P83 P84 P85 P86 P87 P88 P89 P90 P91 P92 P93 P94 P95 P96 P97 P98 P99 P100 P101 P102 P103 P104 P105 P106 P107 P108 P109 P110 P111 P112 P113 P114 P115 P116 P117 P118 P119 P120 P121 P122 P123 P124 P125 P126 P127 P128;
@@ -99,76 +111,76 @@ mod _128 {
 
 #[cfg(test)]
 mod test {
-    use super::TypeBits;
+    use super::Mantissa;
     use core::mem::size_of;
     use typenum::*;
 
-    type Bits2<T> = TypeBits<T, U2>;
+    type Mantissa2<T> = Mantissa<U2, T>;
 
     #[test]
     fn size_of_type() {
         // 8 bit
         #[cfg(feature = "word8")]
         {
-            assert_eq!(size_of::<Bits2<P1>>(), 1);
-            assert_eq!(size_of::<Bits2<P4>>(), 1);
-            assert_eq!(size_of::<Bits2<P8>>(), 1);
+            assert_eq!(size_of::<Mantissa2<P1>>(), 1);
+            assert_eq!(size_of::<Mantissa2<P4>>(), 1);
+            assert_eq!(size_of::<Mantissa2<P8>>(), 1);
         }
 
         #[cfg(all(not(feature = "word8"), feature = "word16"))]
         {
-            assert_eq!(size_of::<Bits2<P1>>(), 2);
-            assert_eq!(size_of::<Bits2<P4>>(), 2);
-            assert_eq!(size_of::<Bits2<P8>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P1>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P4>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P8>>(), 2);
         }
 
         #[cfg(not(any(feature = "word8", feature = "word16")))]
         {
-            assert_eq!(size_of::<Bits2<P1>>(), 4);
-            assert_eq!(size_of::<Bits2<P4>>(), 4);
-            assert_eq!(size_of::<Bits2<P8>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P1>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P4>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P8>>(), 4);
         }
 
         // 16 bit
         #[cfg(any(feature = "word8", feature = "word16"))]
         {
-            assert_eq!(size_of::<Bits2<P9>>(), 2);
-            assert_eq!(size_of::<Bits2<P12>>(), 2);
-            assert_eq!(size_of::<Bits2<P16>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P9>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P12>>(), 2);
+            assert_eq!(size_of::<Mantissa2<P16>>(), 2);
         }
 
         #[cfg(not(any(feature = "word8", feature = "word16")))]
         {
-            assert_eq!(size_of::<Bits2<P9>>(), 4);
-            assert_eq!(size_of::<Bits2<P12>>(), 4);
-            assert_eq!(size_of::<Bits2<P16>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P9>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P12>>(), 4);
+            assert_eq!(size_of::<Mantissa2<P16>>(), 4);
         }
 
         // 32 bit
-        assert_eq!(size_of::<Bits2<P17>>(), 4);
-        assert_eq!(size_of::<Bits2<P24>>(), 4);
-        assert_eq!(size_of::<Bits2<P32>>(), 4);
+        assert_eq!(size_of::<Mantissa2<P17>>(), 4);
+        assert_eq!(size_of::<Mantissa2<P24>>(), 4);
+        assert_eq!(size_of::<Mantissa2<P32>>(), 4);
 
         // 64 bit
-        assert_eq!(size_of::<Bits2<P33>>(), 8);
-        assert_eq!(size_of::<Bits2<P45>>(), 8);
-        assert_eq!(size_of::<Bits2<P64>>(), 8);
+        assert_eq!(size_of::<Mantissa2<P33>>(), 8);
+        assert_eq!(size_of::<Mantissa2<P45>>(), 8);
+        assert_eq!(size_of::<Mantissa2<P64>>(), 8);
 
         #[cfg(feature = "i128")]
         {
-            assert_eq!(size_of::<Bits2<P65>>(), 16);
-            assert_eq!(size_of::<Bits2<P88>>(), 16);
-            assert_eq!(size_of::<Bits2<P128>>(), 16);
+            assert_eq!(size_of::<Mantissa2<P65>>(), 16);
+            assert_eq!(size_of::<Mantissa2<P88>>(), 16);
+            assert_eq!(size_of::<Mantissa2<P128>>(), 16);
         }
 
-        assert_eq!(size_of::<Bits2<P1>>(), size_of::<Bits2<P3>>());
-        assert_eq!(size_of::<Bits2<P4>>(), size_of::<Bits2<P8>>());
-        assert_eq!(size_of::<Bits2<P3>>(), size_of::<Bits2<P7>>());
+        assert_eq!(size_of::<Mantissa2<P1>>(), size_of::<Mantissa2<P3>>());
+        assert_eq!(size_of::<Mantissa2<P4>>(), size_of::<Mantissa2<P8>>());
+        assert_eq!(size_of::<Mantissa2<P3>>(), size_of::<Mantissa2<P7>>());
 
-        assert_eq!(size_of::<Bits2<P9>>(), size_of::<Bits2<P12>>());
-        assert_eq!(size_of::<Bits2<P11>>(), size_of::<Bits2<P16>>());
-        assert_eq!(size_of::<Bits2<P12>>(), size_of::<Bits2<P15>>());
+        assert_eq!(size_of::<Mantissa2<P9>>(), size_of::<Mantissa2<P12>>());
+        assert_eq!(size_of::<Mantissa2<P11>>(), size_of::<Mantissa2<P16>>());
+        assert_eq!(size_of::<Mantissa2<P12>>(), size_of::<Mantissa2<P15>>());
 
-        assert_eq!(size_of::<Bits2<P17>>(), size_of::<Bits2<P24>>());
+        assert_eq!(size_of::<Mantissa2<P17>>(), size_of::<Mantissa2<P24>>());
     }
 }
