@@ -27,20 +27,16 @@ Wrong! We get an extra forty quintillionths of a dollar.
 assertion failed: `(left == right)` (left: `0.3`, right: `0.30000000000000004`)'
 ```
 
-This is due to neither 0.1 nor 0.2 being exactly representable in base-2, just as a third can't
-be represented exactly in base-10. With `Fix`, we can choose the precision we want in base-10,
-at compile-time. In this case, hundredths of a dollar will do.
+This is due to neither 0.1 nor 0.2 being exactly representable in base-2, just as a third can't be represented exactly in base-10. With `Fix`, we can choose the precision we want in base-10, at compile-time. In this case, hundredths of a dollar will do.
 
 ```
-use typenum::P3;
+use typenum::{P3, P4};
 use ufix::si::Centi; // Fix<_, U10, N2>
 
-assert_eq!(Centi::<P3>::new(0_30), Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20));
+assert_eq!(Centi::<P4>::new(0_30), Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20));
 ```
 
-But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is
-slower than bit-shifting, but that's only needed when _moving_ the point. With `Fix`, this is
-only done explicitly with the `convert` method.
+But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is slower than bit-shifting, but that's only needed when _moving_ the point. With `Fix`, this is only done explicitly with the `convert` method.
 
 ```
 use typenum::U4;
@@ -84,12 +80,12 @@ use typenum::Integer;
 
 /**
 
-Fixed-point number representing _2 <sup>`Bits`</sup> × `Base` <sup>`Exp`</sup>_.
+Fixed-point number representing _2 <sup>`Bits`</sup> × `Radix` <sup>`Exp`</sup>_.
 
 - `Bits` is a type-level integer which represent width of mantissa in bits.
   * [`Unsigned`] (`U*`) number means unsigned type.
   * [`Integer`] (`P*`) number means signed type.
-- `Base` is an [`Unsigned`] type-level integer.
+- `Radix` is an [`Unsigned`] type-level integer.
 - `Exp` is a signed type-level [`Integer`].
 
 [`Unsigned`]: ../typenum/marker_traits/trait.Unsigned.html
@@ -97,8 +93,7 @@ Fixed-point number representing _2 <sup>`Bits`</sup> × `Base` <sup>`Exp`</sup>_
 
 # Summary of operations
 
-Lower case variables represent values of mantissa. Upper case _M_, _B_ and _E_ represent type-level
-integers _Bits_, _Base_ and _Exp_, respectively.
+Lower case variables represent values of mantissa. Upper case _R_, _B_ and _E_ represent type-level integers _Radix_, _Bits_ and _Exp_, respectively.
 
 - _−(x B<sup>E</sup>) = (−x) B<sup>E</sup>_
 

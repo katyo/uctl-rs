@@ -5,7 +5,13 @@ use super::{Cast, Fix, Mantissa, Positive, Radix};
 use core::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
-use typenum::{Diff, Integer, Max, Maximum, Min, Minimum, Sum};
+use typenum::{Diff, Integer, Max, Maximum, Min, Minimum, Sum, P1};
+
+pub trait Add1: Add<P1> {}
+
+impl<T: Add<P1>> Add1 for T {}
+
+type Sum1<T> = <T as Add<P1>>::Output;
 
 // Arithmetic.
 
@@ -23,7 +29,8 @@ where
 }
 
 type SumE<E1, E2> = Minimum<E1, E2>;
-type SumB<B1, E1, B2, E2> = Diff<Maximum<Sum<B1, E1>, Sum<B2, E2>>, SumE<E1, E2>>;
+type SumBovf<B1, E1, B2, E2> = Diff<Maximum<Sum<B1, E1>, Sum<B2, E2>>, SumE<E1, E2>>;
+type SumB<B1, E1, B2, E2> = Sum1<SumBovf<B1, E1, B2, E2>>;
 type SumT<R, B1, E1, B2, E2> = Fix<R, SumB<B1, E1, B2, E2>, SumE<E1, E2>>;
 
 /// Fixed-point addition
@@ -41,6 +48,7 @@ where
     B2: Positive + Add<E2>,
     E2: Integer,
     Sum<B1, E1>: Max<Sum<B2, E2>>,
+    SumBovf<B1, E1, B2, E2>: Add1,
     SumB<B1, E1, B2, E2>: Positive,
     SumE<E1, E2>: Integer,
     Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
@@ -70,6 +78,7 @@ where
     B2: Positive + Add<E2>,
     E2: Integer,
     Sum<B1, E1>: Max<Sum<B2, E2>>,
+    SumBovf<B1, E1, B2, E2>: Add1,
     SumB<B1, E1, B2, E2>: Positive,
     SumE<E1, E2>: Integer,
     Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
@@ -253,9 +262,9 @@ mod tests {
 
     #[test]
     fn add_signed() {
-        assert_eq!(Kilo::<P1>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
+        assert_eq!(Kilo::<P2>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
         assert_eq!(
-            Centi::<P3>::new(0_30),
+            Centi::<P4>::new(0_30),
             Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20)
         );
     }
@@ -271,7 +280,7 @@ mod tests {
 
     #[test]
     fn sub_signed() {
-        assert_eq!(Kilo::<P1>::new(1), Kilo::<P1>::new(3) - Kilo::<P1>::new(2));
+        assert_eq!(Kilo::<P2>::new(1), Kilo::<P1>::new(3) - Kilo::<P1>::new(2));
     }
 
     #[test]
