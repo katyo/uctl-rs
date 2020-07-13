@@ -17,6 +17,10 @@ maintenance = { status = "experimental" }
 [dependencies]
 typenum = "^1"
 
+[dependencies.hash32]
+version = "^0.1"
+optional = true
+
 [features]
 default = []
 i128 = ["typenum/i128"]

@@ -138,13 +138,14 @@ The __word8__ and __word16__ features can reduce minimum mantissa size to 8 and 
 #![forbid(missing_docs)]
 
 mod aliases;
+mod arithmetic;
 mod cast;
 mod cast_fixed;
 mod fixed;
 mod format;
 mod from_number;
+mod hashing;
 mod into_number;
-mod operators;
 mod positive;
 mod radix;
 mod types;
