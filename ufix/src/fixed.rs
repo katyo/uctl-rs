@@ -65,20 +65,24 @@ use core::marker::PhantomData;
 
 /**
 
-Fixed-point number representing _2 <sup>`Bits`</sup> × `Radix` <sup>`Exp`</sup>_.
+Fixed-point number representing _ `Radix` <sub>`Digits`</sub> × `Radix` <sup>`Exponent`</sup>_.
 
-- `Bits` is a type-level integer which represent width of mantissa in bits.
+- `Radix` is a type-level integer which represents the base of number.
   * [`Unsigned`] (`U*`) number means unsigned type.
   * [`Integer`] (`P*`) number means signed type.
-- `Radix` is an [`Unsigned`] type-level integer.
-- `Exp` is a signed type-level [`Integer`].
+- `Digits` is a signed positive type-level [`Integer`] which represent width of mantissa in digits of specified radix.
+- `Exponent` is a signed type-level [`Integer`].
 
 [`Unsigned`]: ../typenum/marker_traits/trait.Unsigned.html
 [`Integer`]: ../typenum/marker_traits/trait.Integer.html
 
 # Summary of operations
 
-Lower case variables represent values of mantissa. Upper case _R_, _B_ and _E_ represent type-level integers _Radix_, _Bits_ and _Exp_, respectively.
+Lower case variables represent values of mantissa. Upper case _R_, _B_ and _E_ represent type-level integers _Radix_, _Digits_ and _Exponent_, respectively.
+
+## Arithmetic
+
+__TODO__: Update outdated docs
 
 - _−(x B<sup>E</sup>) = (−x) B<sup>E</sup>_
 
@@ -97,8 +101,12 @@ Lower case variables represent values of mantissa. Upper case _R_, _B_ and _E_ r
 - _(x B<sup>E<sub>x</sub></sup>) % (y B<sup>E<sub>y</sub></sup>) =
   (x % y) B<sup>E<sub>x</sub></sup>_
 
+## Comparison
+
+To compare fixed-point values of different types you should first cast at least one of its to type of other or cast both to single common type. Implicit semi-automatic conversion lacks because in common case it may give ambiguous results.
+
  */
-#[derive(Copy, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct Fix<R, B, E>
 where
