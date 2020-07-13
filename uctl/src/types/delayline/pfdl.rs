@@ -6,19 +6,20 @@ This module implements delay line which pre-initialized with some value.
 
 */
 
-use core::{
-    usize,
-    iter::{IntoIterator, FromIterator, repeat},
-};
-use typenum::NonZero;
-use generic_array::{GenericArray, ArrayLength};
 use super::DelayLine;
+use core::{
+    iter::{repeat, FromIterator, IntoIterator},
+    usize,
+};
+use generic_array::{ArrayLength, GenericArray};
+use typenum::NonZero;
 
 /// Simple pre-filled delay line
 #[derive(Debug, Default)]
 pub struct Store<T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     /// Statically sized storage for all available values
     data: GenericArray<T, N>,
@@ -27,8 +28,9 @@ where T: Copy,
 }
 
 impl<T, N> From<T> for Store<T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     fn from(value: T) -> Self {
         Self {
@@ -39,8 +41,9 @@ where T: Copy,
 }
 
 impl<T, N> DelayLine for Store<T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     type Value = T;
     type Length = N;
@@ -59,8 +62,9 @@ where T: Copy,
 }
 
 impl<'a, T, N> IntoIterator for &'a Store<T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     type Item = T;
     type IntoIter = Iter<'a, T, N>;
@@ -75,8 +79,9 @@ where T: Copy,
 
 /// Iterator over stored values
 pub struct Iter<'a, T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     /// Delay line
     line: &'a Store<T, N>,
@@ -85,8 +90,9 @@ where T: Copy,
 }
 
 impl<'a, T, N> Iterator for Iter<'a, T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     type Item = T;
 
@@ -112,8 +118,9 @@ where T: Copy,
 }
 
 impl<'a, T, N> ExactSizeIterator for Iter<'a, T, N>
-where T: Copy,
-      N: ArrayLength<T> + NonZero,
+where
+    T: Copy,
+    N: ArrayLength<T> + NonZero,
 {
     fn len(&self) -> usize {
         if self.item != usize::MAX {
@@ -130,8 +137,8 @@ where T: Copy,
 
 #[cfg(test)]
 mod test {
-    use typenum::{U1, U3};
     use super::*;
+    use typenum::{U1, U3};
 
     #[test]
     fn max_len() {

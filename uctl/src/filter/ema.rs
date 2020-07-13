@@ -19,13 +19,13 @@ See also [Exponential moving average](https://en.wikipedia.org/wiki/Moving_avera
 
 */
 
-use core::{
-  marker::PhantomData,
-  ops::{Add, Sub, Mul, Div},
-};
-use typenum::{Prod, Quot, Sum};
-use ufix::Cast;
 use crate::Transducer;
+use core::{
+    marker::PhantomData,
+    ops::{Add, Div, Mul, Sub},
+};
+use typenum::{Diff, Prod, Quot, Sum};
+use ufix::Cast;
 
 /**
 EMA filter parameters
@@ -40,9 +40,7 @@ pub struct Param<A> {
     one_sub_alpha: A,
 }
 
-impl<A> Param<A>
-where A: Copy + Cast<f64> + Sub<Output = A>,
-{
+impl<A> Param<A> {
     /**
     Init EMA parameters using alpha factor
 
@@ -54,10 +52,13 @@ where A: Copy + Cast<f64> + Sub<Output = A>,
 
     Filter formula: _y = α * x + (1 - α) * y[-1]_
      */
-    pub fn from_alpha(alpha: A) -> Self {
+    pub fn from_alpha(alpha: A) -> Self
+    where
+        A: Copy + Cast<f64> + Sub<A> + Cast<Diff<A, A>>,
+    {
         Self {
             alpha,
-            one_sub_alpha: A::cast(1.0) - alpha,
+            one_sub_alpha: A::cast(A::cast(1.0) - alpha),
         }
     }
 
@@ -77,9 +78,10 @@ where A: Copy + Cast<f64> + Sub<Output = A>,
     See [`Param::from_alpha`](#method.from_alpha).
     */
     pub fn from_steps<N>(n: N) -> Self
-    where N: Cast<f64> + Add<N> + Mul<A>,
-          A: Cast<Quot<Prod<N, A>, Sum<N, N>>>,
-          Prod<N, A>: Cast<f64> + Div<Sum<N, N>>,
+    where
+        N: Cast<f64> + Add<N> + Mul<A>,
+        A: Copy + Cast<f64> + Sub<A> + Cast<Diff<A, A>> + Cast<Quot<Prod<N, A>, Sum<N, N>>>,
+        Prod<N, A>: Cast<f64> + Div<Sum<N, N>>,
     {
         // α = 2 / (n + 1)
         Self::from_alpha(A::cast(<Prod<N, A>>::cast(2.0) / (n + N::cast(1.0))))
@@ -102,11 +104,13 @@ where A: Copy + Cast<f64> + Sub<Output = A>,
     See [`Param::from_alpha`](#method.from_alpha).
      */
     pub fn from_time<T, P>(time: T, period: P) -> Self
-    where T: Cast<P> + Add<Output = T>,
-          P: Copy + Add<P>,
-          Sum<P, P>: Div<T, Output = A>,
+    where
+        A: Copy + Cast<f64> + Sub<A> + Cast<Diff<A, A>> + Cast<Quot<Sum<P, P>, Sum<T, P>>>,
+        T: Cast<P> + Add<P>,
+        P: Copy + Add<P>,
+        Sum<P, P>: Div<Sum<T, P>>,
     {
-        Self::from_alpha((period + period) / (time + T::cast(period)))
+        Self::from_alpha(A::cast((period + period) / (time + period)))
     }
 
     /**
@@ -120,11 +124,16 @@ where A: Copy + Cast<f64> + Sub<Output = A>,
 
     See [`Param::from_alpha`](#method.from_alpha).
      */
-    pub fn from_pt1<T, P>(time: T, period: P) -> Self
-    where T: Cast<P> + Add<Output = T>,
-          P: Copy + Div<T, Output = A>,
+    pub fn from_pt1<T>(time: T, period: T) -> Self
+    where
+        A: Copy + Cast<f64> + Sub<A> + Cast<Diff<A, A>> + Cast<Quot<Prod<Sum<T, T>, A>, Sum<T, T>>>,
+        T: Copy + Add<T>,
+        Sum<T, T>: Mul<A>,
+        Prod<Sum<T, T>, A>: Cast<T> + Div<Sum<T, T>>,
     {
-        Self::from_alpha(period / (time + T::cast(period)))
+        Self::from_alpha(A::cast(
+            Prod::<Sum<T, T>, A>::cast(period) / (time + period),
+        ))
     }
 
     /// Adjust parameters gain
@@ -169,9 +178,7 @@ impl<O> State<O> {
     - `value`: The initial value
      */
     pub fn new(value: O) -> Self {
-        Self {
-            last_value: value,
-        }
+        Self { last_value: value }
     }
 }
 
@@ -186,8 +193,9 @@ EMA filter
 pub struct Filter<A, I, O>(PhantomData<(A, I, O)>);
 
 impl<A, I, O> Transducer for Filter<A, I, O>
-where O: Copy + Add<O> + Cast<Prod<A, I>> + Cast<Prod<A, O>> + Cast<Sum<O, O>>,
-      A: Copy + Mul<I> + Mul<O>,
+where
+    O: Copy + Add<O> + Cast<Prod<A, I>> + Cast<Prod<A, O>> + Cast<Sum<O, O>>,
+    A: Copy + Mul<I> + Mul<O>,
 {
     type Input = I;
     type Output = O;
@@ -196,19 +204,17 @@ where O: Copy + Add<O> + Cast<Prod<A, I>> + Cast<Prod<A, O>> + Cast<Sum<O, O>>,
 
     fn apply(param: &Self::Param, state: &mut Self::State, value: Self::Input) -> Self::Output {
         // X = alpha * X + (1 - alpha) * X0
-        state.last_value = O::cast(
-            O::cast(param.alpha * value) +
-            O::cast(param.one_sub_alpha * state.last_value)
-        );
+        state.last_value =
+            O::cast(O::cast(param.alpha * value) + O::cast(param.one_sub_alpha * state.last_value));
         state.last_value
     }
 }
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use typenum::*;
     use ufix::bin::Fix;
-    use super::*;
 
     #[test]
     fn from_n_float() {
@@ -230,15 +236,21 @@ mod test {
         type A = Fix<P32, N18>;
         type V = Fix<P32, N13>;
 
-        let param = Param::<A>::from_steps(Fix::<P32, N18>::cast(2.0));
+        let param = Param::<A>::from_steps(Fix::<P31, N18>::cast(2.0));
 
         assert_eq!(param.alpha, Fix::cast(0.6666667));
         assert_eq!(param.one_sub_alpha, Fix::cast(0.333336));
 
         let mut state = State::<V>::new(Fix::cast(0.0));
 
-        assert_eq!(Filter::apply(&param, &mut state, V::cast(1.0)), V::cast(0.6666667));
-        assert_eq!(Filter::apply(&param, &mut state, V::cast(1.0)), V::cast(0.8888889));
+        assert_eq!(
+            Filter::apply(&param, &mut state, V::cast(1.0)),
+            V::cast(0.6666667)
+        );
+        assert_eq!(
+            Filter::apply(&param, &mut state, V::cast(1.0)),
+            V::cast(0.8888889)
+        );
     }
 
     #[test]
@@ -253,7 +265,13 @@ mod test {
 
         let mut state = State::<V>::new(Fix::cast(0.0));
 
-        assert_eq!(Filter::apply(&param, &mut state, V::cast(1.0)), V::cast(0.6666667));
-        assert_eq!(Filter::apply(&param, &mut state, V::cast(1.0)), V::cast(0.8888889));
+        assert_eq!(
+            Filter::apply(&param, &mut state, V::cast(1.0)),
+            V::cast(0.6666667)
+        );
+        assert_eq!(
+            Filter::apply(&param, &mut state, V::cast(1.0)),
+            V::cast(0.8888889)
+        );
     }
 }

@@ -16,7 +16,7 @@ use core::{
     ops::{Add, Mul},
 };
 use generic_array::{ArrayLength, GenericArray};
-use typenum::{Add1, NonZero, Prod, Unsigned, B1};
+use typenum::{Add1, NonZero, Prod, Sum, Unsigned, B1};
 use ufix::Cast;
 
 /// FIR filter parameters
@@ -43,7 +43,7 @@ pub struct Filter<O, B, L>(PhantomData<(O, B, L)>);
 impl<O, B, L> Transducer for Filter<O, B, L>
 where
     B: Copy + Mul<L::Value>,
-    O: Cast<Prod<B, L::Value>> + Add<O, Output = O>,
+    O: Cast<Prod<B, L::Value>> + Add<O> + Cast<Sum<O, O>>,
     L: DelayLine,
     for<'a> &'a L: IntoIterator<Item = L::Value>,
     L::Length: Add<B1>,
@@ -60,7 +60,7 @@ where
             .skip(1)
             .zip(state.iter())
             .fold(O::cast(param[0] * value), |accum, (b, x)| {
-                accum + O::cast(*b * x)
+                O::cast(accum + O::cast(*b * x))
             });
 
         state.push(value);

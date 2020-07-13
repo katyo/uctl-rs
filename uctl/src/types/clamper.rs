@@ -1,9 +1,9 @@
+use crate::Transducer;
 use core::{
-    //ops::{RangeFrom, RangeToInclusive, RangeInclusive, RangeFull},
-    ops::{RangeBounds, Bound::*},
     marker::PhantomData,
+    //ops::{RangeFrom, RangeToInclusive, RangeInclusive, RangeFull},
+    ops::{Bound::*, RangeBounds},
 };
-use crate::{Transducer};
 
 pub struct Clamper<R, T> {
     val: PhantomData<(R, T)>,
@@ -22,13 +22,37 @@ where
     #[inline]
     fn apply(param: &Self::Param, _state: &mut Self::State, value: Self::Input) -> Self::Output {
         let value = match param.start_bound() {
-            Included(from) => if value < *from { *from } else { value },
-            Excluded(from) => if value <= *from { *from } else { value },
+            Included(from) => {
+                if value < *from {
+                    *from
+                } else {
+                    value
+                }
+            }
+            Excluded(from) => {
+                if value <= *from {
+                    *from
+                } else {
+                    value
+                }
+            }
             Unbounded => value,
         };
         match param.end_bound() {
-            Included(to) => if value > *to { *to } else { value },
-            Excluded(to) => if value >= *to { *to } else { value },
+            Included(to) => {
+                if value > *to {
+                    *to
+                } else {
+                    value
+                }
+            }
+            Excluded(to) => {
+                if value >= *to {
+                    *to
+                } else {
+                    value
+                }
+            }
             Unbounded => value,
         }
     }
@@ -116,7 +140,7 @@ mod test {
 
     #[test]
     fn clamp_from_float() {
-        let range = 3.0 ..;
+        let range = 3.0..;
 
         assert_eq!(Clamper::apply(&range, &mut (), 2.9), 3.0);
         assert_eq!(Clamper::apply(&range, &mut (), 3.0), 3.0);
@@ -125,7 +149,7 @@ mod test {
 
     #[test]
     fn clamp_to_float() {
-        let range = ..= 3.0;
+        let range = ..=3.0;
 
         assert_eq!(Clamper::apply(&range, &mut (), 2.9), 2.9);
         assert_eq!(Clamper::apply(&range, &mut (), 3.0), 3.0);
@@ -134,7 +158,7 @@ mod test {
 
     #[test]
     fn clamp_in_float() {
-        let range = 2.0 ..= 3.0;
+        let range = 2.0..=3.0;
 
         assert_eq!(Clamper::apply(&range, &mut (), 1.9), 2.0);
         assert_eq!(Clamper::apply(&range, &mut (), 2.0), 2.0);

@@ -25,13 +25,13 @@ See also [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter) article.
 
  */
 
+use crate::Transducer;
 use core::{
     marker::PhantomData,
-    ops::{Add, Sub, Mul, Div},
+    ops::{Add, Div, Mul, Sub},
 };
-use typenum::{Sum, Diff, Prod, Quot};
+use typenum::{Diff, Prod, Quot, Sum};
 use ufix::Cast;
-use crate::Transducer;
 
 /**
 LQE filter parameters
@@ -72,7 +72,8 @@ impl<F, N, F2> Param<F, N, F2> {
         let h = F::cast(h);
 
         Self {
-            f, h,
+            f,
+            h,
             q: N::cast(q),
             r: N::cast(r),
 
@@ -85,7 +86,7 @@ impl<F, N, F2> Param<F, N, F2> {
 /**
 LQE filter state
 
-- `O` - output and state type
+- `O` - output type
 - `P` - covariance type
 
 */
@@ -104,7 +105,7 @@ LQE filter
 - `N` - noise type
 - `F2` - square factor type
 - `I` - input type
-- `O` - output and state type
+- `O` - output type
 - `P` - covariance type
 - `K` - gain type
 
@@ -115,7 +116,13 @@ impl<F, N, F2, I, O, P, K> Transducer for Filter<F, N, F2, I, O, P, K>
 where
     F: Copy + Cast<f64> + Cast<Prod<K, F>> + Mul<I> + Mul<O> + Mul<P> + Sub<F>,
     F2: Copy + Mul<P>,
-    O: Copy + Cast<Prod<F, I>> + Cast<Prod<F, O>> + Cast<Prod<K, Diff<O, O>>> + Cast<Sum<O, O>> + Sub<O> + Add<O>,
+    O: Copy
+        + Cast<Prod<F, I>>
+        + Cast<Prod<F, O>>
+        + Cast<Prod<K, Diff<O, O>>>
+        + Cast<Sum<O, O>>
+        + Sub<O>
+        + Add<O>,
     P: Copy + Cast<Prod<F2, P>> + Cast<Sum<P, N>> + Cast<Prod<Diff<F, F>, P>> + Add<N>,
     N: Copy + Cast<Prod<F2, P>> + Add<N>,
     Prod<F, P>: Div<Sum<N, N>>,
@@ -157,15 +164,15 @@ where
 
 #[cfg(test)]
 mod test {
-    use typenum::*;
-    use ufix::{bin::Fix};
     use super::*;
+    use typenum::*;
+    use ufix::bin::Fix;
 
     #[test]
     fn lqe_f32() {
         let param = Param::<f32, f32, f32>::new(0.6, 0.5, 0.2, 0.4);
         let mut state = State::<f32, f32>::default();
-        type Filter1 = Filter::<f32, f32, f32, f32, f32, f32, f32>;
+        type Filter1 = Filter<f32, f32, f32, f32, f32, f32, f32>;
 
         assert_eq!(Filter1::apply(&param, &mut state, 0.123456), 0.0658432);
         assert_eq!(Filter1::apply(&param, &mut state, 1.01246), 0.5400895);
@@ -174,19 +181,28 @@ mod test {
 
     #[test]
     fn lqe_fix() {
-        type F = Fix<P32, N16>;
-        type N = Fix<P32, N16>;
-        type I = Fix<P32, N16>;
-        type O = Fix<P32, N16>;
-        type P = Fix<P32, N16>;
-        type K = Fix<P32, N16>;
+        type F = Fix<P31, N16>;
+        type N = Fix<P31, N16>;
+        type I = Fix<P31, N16>;
+        type O = Fix<P31, N16>;
+        type P = Fix<P31, N16>;
+        type K = Fix<P31, N16>;
 
         let param = Param::<F, N, F>::new(0.6, 0.5, 0.2, 0.4);
         let mut state = State::<O, P>::default();
-        type Filter1 = Filter::<F, N, F, I, O, P, K>;
+        type Filter1 = Filter<F, N, F, I, O, P, K>;
 
-        assert_eq!(Filter1::apply(&param, &mut state, Fix::cast(0.123456)), Fix::cast(0.06584));
-        assert_eq!(Filter1::apply(&param, &mut state, Fix::cast(1.01246)), Fix::cast(0.5400895));
-        assert_eq!(Filter1::apply(&param, &mut state, Fix::cast(-5.198)), Fix::cast(-2.49045));
+        assert_eq!(
+            Filter1::apply(&param, &mut state, Fix::cast(0.123456)),
+            Fix::cast(0.06584)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, Fix::cast(1.01246)),
+            Fix::cast(0.5400895)
+        );
+        assert_eq!(
+            Filter1::apply(&param, &mut state, Fix::cast(-5.198)),
+            Fix::cast(-2.49045)
+        );
     }
 }

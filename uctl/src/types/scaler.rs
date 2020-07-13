@@ -1,10 +1,10 @@
+use crate::Transducer;
 use core::{
-    ops::{RangeInclusive, Mul, Add, Div, Sub},
     marker::PhantomData,
+    ops::{Add, Div, Mul, RangeInclusive, Sub},
 };
-use ufix::{Cast};
-use typenum::{Prod, Quot, Sum, Diff};
-use crate::{Transducer};
+use typenum::{Diff, Prod, Quot, Sum};
+use ufix::Cast;
 
 /**
 

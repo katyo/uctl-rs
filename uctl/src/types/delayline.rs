@@ -1,10 +1,11 @@
 pub mod pfdl;
 
-use typenum::{Unsigned, NonZero};
+use typenum::{NonZero, Unsigned};
 
 /// Delay line to use as internal storage for filters
 pub trait DelayLine
-where for<'a> &'a Self: IntoIterator<Item = <Self as DelayLine>::Value>,
+where
+    for<'a> &'a Self: IntoIterator<Item = <Self as DelayLine>::Value>,
 {
     type Value: Copy;
     type Length: Unsigned + NonZero;
