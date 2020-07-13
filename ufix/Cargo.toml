@@ -11,7 +11,7 @@ keywords = ["fixed-point", "number", "typenum", "embedded", "no-std"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
 [badges]
-travis-ci = { repoitory = "katyo/uctl-rs", tld = "com" }
+travis-ci = { repository = "katyo/uctl-rs", tld = "com" }
 maintenance = { status = "experimental" }
 
 [dependencies]
