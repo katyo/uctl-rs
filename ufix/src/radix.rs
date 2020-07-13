@@ -3,12 +3,14 @@ use core::ops::{Div, Mul};
 
 /// The trait which infers type for store the value according to given radix parameter
 pub trait Radix<B>: Positive {
+    /// The integer type which can hold required number of digits with this radix
     type Type: Sized
         + FromPositive
         + UnsignedPow
         + Mul<Output = Self::Type>
         + Div<Output = Self::Type>;
 
+    /// Get ratio of integer type which can be used to adjust mantissa value with given exponent
     fn ratio(exp: u32) -> Self::Type
     where
         Self: Sized,
@@ -17,6 +19,9 @@ pub trait Radix<B>: Positive {
     }
 }
 
+/// The mantissa type for given radix and number of digits
+///
+/// Alias of `<R as Radix<B>>::Type`.
 pub type Mantissa<R, B> = <R as Radix<B>>::Type;
 
 macro_rules! radix_impl {

@@ -1,51 +1,49 @@
 use super::Fix;
 
-/// Base-2 types.
+/// Base-2 fixed-point types
 pub mod bin {
     use typenum::*;
 
+    /// Unsigned binary fixed-point type
     pub type UFix<B, E> = super::Fix<U2, B, E>;
+    /// Signed binary fixed-point type
     pub type Fix<B, E> = super::Fix<P2, B, E>;
 
+    /// Unsigned binary fixed-point type with 8-bits mantissa
     pub type UFix8<E> = UFix<P8, E>;
+    /// Unsigned binary fixed-point type with 16-bits mantissa
     pub type UFix16<E> = UFix<P16, E>;
+    /// Unsigned binary fixed-point type with 32-bits mantissa
     pub type UFix32<E> = UFix<P32, E>;
+    /// Unsigned binary fixed-point type with 64-bits mantissa
     pub type UFix64<E> = UFix<P64, E>;
 
     #[cfg(feature = "i128")]
+    /// Unsigned binary fixed-point type with 128-bits mantissa
     pub type UFix128<E> = UFix<P128, E>;
 
+    /// Signed binary fixed-point type with 8-bits mantissa
     pub type Fix8<E> = Fix<P8, E>;
+    /// Signed binary fixed-point type with 16-bits mantissa
     pub type Fix16<E> = Fix<P16, E>;
+    /// Signed binary fixed-point type with 32-bits mantissa
     pub type Fix32<E> = Fix<P32, E>;
+    /// Signed binary fixed-point type with 64-bits mantissa
     pub type Fix64<E> = Fix<P64, E>;
 
     #[cfg(feature = "i128")]
+    /// Signed binary fixed-point type with 128-bits mantissa
     pub type Fix128<E> = Fix<P128, E>;
 }
 
-/// Base-10 types.
+/// Base-10 fixed-point types
 pub mod dec {
     use typenum::*;
 
+    /// Unsigned decimal fixed-point type
     pub type UFix<B, E> = super::Fix<U10, B, E>;
+    /// Signed decimal fixed-point type
     pub type Fix<B, E> = super::Fix<P10, B, E>;
-
-    pub type UFix8<E> = UFix<P8, E>;
-    pub type UFix16<E> = UFix<P16, E>;
-    pub type UFix32<E> = UFix<P32, E>;
-    pub type UFix64<E> = UFix<P64, E>;
-
-    #[cfg(feature = "i128")]
-    pub type UFix128<E> = UFix<P128, E>;
-
-    pub type Fix8<E> = Fix<P8, E>;
-    pub type Fix16<E> = Fix<P16, E>;
-    pub type Fix32<E> = Fix<P32, E>;
-    pub type Fix64<E> = Fix<P64, E>;
-
-    #[cfg(feature = "i128")]
-    pub type Fix128<E> = Fix<P128, E>;
 }
 
 /// SI prefixes.

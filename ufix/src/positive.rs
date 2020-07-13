@@ -2,20 +2,32 @@ use typenum::{Bit, NonZero, PInt, UInt, Unsigned};
 
 /// The trait which implemented for type-level numbers which is greater than zero.
 pub trait Positive {
+    /// The type as u8
     const U8: u8;
+    /// The type as u16
     const U16: u16;
+    /// The type as u32
     const U32: u32;
+    /// The type as u64
     const U64: u64;
     #[cfg(feature = "i128")]
+    /// The type as u128
     const U128: u128;
+    /// The type as usize
     const USIZE: usize;
 
+    /// The type as i8
     const I8: i8;
+    /// The type as i16
     const I16: i16;
+    /// The type as i32
     const I32: i32;
+    /// The type as i64
     const I64: i64;
     #[cfg(feature = "i128")]
+    /// The type as i128
     const I128: i128;
+    /// The type as isize
     const ISIZE: isize;
 }
 

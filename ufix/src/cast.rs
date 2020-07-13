@@ -1,5 +1,6 @@
 /// Similar to `core::convert::From`
 pub trait Cast<T> {
+    /// Convert value from `T`
     fn cast(value: T) -> Self;
 }
 
