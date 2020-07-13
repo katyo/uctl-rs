@@ -1,4 +1,4 @@
-use super::{Cast, Fix, FromUnsigned, Mantissa, Positive, Radix, UnsignedPow};
+use super::{Cast, Fix, Mantissa, Positive, Radix};
 use typenum::Integer;
 
 macro_rules! from_num {
@@ -13,7 +13,7 @@ macro_rules! from_num {
         {
             fn from(value: $TYPE) -> Self {
                 // radix^|exp|
-                let ratio = Mantissa::<R, B>::from_unsigned::<R>().unsigned_pow(E::I32.abs() as u32);
+                let ratio = R::ratio(E::I32.abs() as u32);
                 // TODO: Add rounding
                 Self::new(if 0 < E::I32 {
                     from_num!(@$KIND, /, $TYPE, Mantissa<R, B>, value, ratio)

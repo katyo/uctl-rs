@@ -5,7 +5,7 @@
 [![Crates.io Package](https://img.shields.io/crates/v/uctl.svg?style=popout)](https://crates.io/crates/uctl)
 [![Docs.rs API Documentation](https://docs.rs/uctl/badge.svg)](https://docs.rs/uctl)
 
-This library intended to simplify developing control algorithms for bare-metal low-end hardware such as 
+This library intended to simplify developing control algorithms for bare-metal low-end hardware such as
 microcontrollers.
 
 ## Overview
@@ -19,8 +19,7 @@ All components can operate both with floating point and fixed point values.
 
 ### Optimization techniques
 
-When you targeted to FPU-less hardware in order to get best possible performance and reduce firmware size you should 
-use only fixed point arithmetic because internally it operates with integers.
+When you targeted to FPU-less hardware in order to get best possible performance and reduce firmware size you should use only binary fixed point arithmetic because internally it operates with integers.
 Also you should avoid exceeding platform word size when it is possible without lossing required precision.
 
 ### Safe usage

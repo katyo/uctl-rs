@@ -1,21 +1,16 @@
 /*!
 
-Fixed-point number types.
+Flexible and safe fixed-point numberic types.
 
 # What?
 
-Fixed-point is a number representation with a fixed number of digits before and after the radix
-point. This means that range is static rather than dynamic, as with floating-point. It also
-means that they can be represented as integers, with their scale tracked by the type system.
+Fixed-point is a number representation with a fixed number of digits before and after the radix point. This means that range is static rather than dynamic, as with floating-point. It also means that they can be represented as integers, with their scale tracked by the type system.
 
-In this library, the scale of a `Fix` is represented as two type-level integers: the base and
-the exponent. Any underlying integer primitive can be used to store the number. Arithmetic can
-be performed on these numbers, and they can be converted to different scale exponents.
+In this library, the scale of a `Fix` is represented as two type-level integers: _mantissa_ digits and _exponent_ value. The number of mantissa digits corresponds to selected radix: this is number of bits in case of binary fixed (when _radix_ is 2) and number of decimal places in case of decimal fixed (when _radix_ is 10). The underlying integer primitive which will be used to store the number in each concrete place will corresponds to radix and mantissa digits. Arithmetic can be performed on these numbers, and they can be converted to different scale exponents explicitly.
 
 # Why?
 
-A classic example: let's sum 10 cents and 20 cents using floating-point. We expect a result of
-30 cents.
+A classic example: let's sum 10 cents and 20 cents using binary floating-point. We expect a result of 30 cents.
 
 ```should_panic
 assert_eq!(0.30, 0.10 + 0.20);
@@ -31,7 +26,7 @@ This is due to neither 0.1 nor 0.2 being exactly representable in base-2, just a
 
 ```
 use typenum::{P3, P4};
-use ufix::si::Centi; // Fix<_, U10, N2>
+use ufix::si::Centi; // dec::Fix<_, N2>
 
 assert_eq!(Centi::<P4>::new(0_30), Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20));
 ```
@@ -39,29 +34,28 @@ assert_eq!(Centi::<P4>::new(0_30), Centi::<P3>::new(0_10) + Centi::<P3>::new(0_2
 But decimal is inefficient for binary computers, right? Multiplying and dividing by 10 is slower than bit-shifting, but that's only needed when _moving_ the point. With `Fix`, this is only done explicitly with the `convert` method.
 
 ```
-use typenum::U4;
+use typenum::P4;
 use ufix::si::{Centi, Milli};
 
-assert_eq!(Milli::<U4>::new(0_300), Centi::<U4>::new(0_30).convert());
+assert_eq!(Milli::<P4>::new(0_300), Centi::<P4>::new(0_30).convert());
 ```
 
 We can also choose a base-2 scale just as easily.
 
 ```
-use typenum::U5;
+use typenum::P5;
 use ufix::iec::{Kibi, Mebi};
 
-assert_eq!(Kibi::<U5>::new(1024), Mebi::<U5>::new(1).convert());
+assert_eq!(Kibi::<P5>::new(1024), Mebi::<P5>::new(1).convert());
 ```
 
-It's also worth noting that the type-level scale changes when multiplying and dividing,
-avoiding any implicit conversion.
+It's also worth noting that the type-level scale changes when multiplying and dividing, avoiding any implicit conversion.
 
 ```
-use typenum::{U1, U2};
+use typenum::{P1, P2};
 use ufix::iec::{Gibi, Kibi, Mebi};
 
-assert_eq!(Mebi::<U1>::new(3), Gibi::<U2>::new(6) / Kibi::<U1>::new(2));
+assert_eq!(Mebi::<P1>::new(3), Gibi::<P2>::new(6) / Kibi::<P1>::new(2));
 ```
 
 # `no_std`
@@ -70,11 +64,11 @@ This crate is `no_std`.
 
 # `i128` support
 
-Support for `u128` and `i128` can be enabled on nightly Rust through the `i128` Cargo feature.
+Support for `u128` and `i128` can be enabled through the `i128` Cargo feature.
 
  */
 
-use super::{Cast, FromUnsigned, Mantissa, Positive, Radix, UnsignedPow};
+use super::{Cast, Mantissa, Positive, Radix};
 use core::marker::PhantomData;
 use typenum::Integer;
 
@@ -156,8 +150,7 @@ where
         Er: Integer,
     {
         // radix^|exp-to_exp|
-        let ratio =
-            Mantissa::<R, B>::from_unsigned::<R>().unsigned_pow((E::I32 - Er::I32).abs() as u32);
+        let ratio = R::ratio((E::I32 - Er::I32).abs() as u32);
 
         if E::I32 < Er::I32 {
             Fix::new(self.bits / ratio)
@@ -181,11 +174,11 @@ where
     /// # Examples
     ///
     /// ```
-    /// use typenum::U1;
+    /// use typenum::P1;
     /// use ufix::si::{Kilo, Milli};
     ///
-    /// let kilo = Kilo::<U1>::new(5);
-    /// let milli = Milli::<U1>::new(5_000_000);
+    /// let kilo = Kilo::<P1>::new(5);
+    /// let milli = Milli::<P1>::new(5_000_000);
     ///
     /// assert_eq!(kilo, milli.convert());
     /// assert_eq!(milli, kilo.convert());

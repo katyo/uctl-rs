@@ -230,7 +230,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::super::si::{Centi, Kilo, Milli, Unit};
+    use super::super::si::{Centi, Kilo, Milli, UCenti, UKilo, Unit};
     use typenum::*;
 
     #[test]
@@ -240,12 +240,12 @@ mod tests {
 
     #[test]
     fn convert_kilo_to_milli() {
-        assert_eq!(Milli::<U8>::new(15_000_000), Kilo::<U2>::new(15).convert());
+        assert_eq!(Milli::<P8>::new(15_000_000), Kilo::<P2>::new(15).convert());
     }
 
     #[test]
     fn cmp_unsigned() {
-        assert!(Kilo::<U1>::new(1) < Kilo::new(2));
+        assert!(UKilo::<P1>::new(1) < UKilo::new(2));
     }
 
     #[test]
@@ -269,14 +269,17 @@ mod tests {
         );
     }
 
-    /*#[test]
+    #[test]
     fn add_unsigned() {
-        assert_eq!(Kilo::<U1>::new(1) + Kilo::<U1>::new(2), Kilo::<U1>::new(3));
         assert_eq!(
-            Centi::<P3>::new(0_10) + Centi::<U3>::new(0_20),
-            Centi::<P3>::new(0_30)
+            UKilo::<P1>::new(1) + UKilo::<P1>::new(2),
+            UKilo::<P2>::new(3)
         );
-    }*/
+        assert_eq!(
+            UCenti::<P3>::new(0_10) + UCenti::<P3>::new(0_20),
+            UCenti::<P4>::new(0_30)
+        );
+    }
 
     #[test]
     fn sub_signed() {
@@ -307,8 +310,8 @@ mod tests {
 
     #[test]
     fn sub_assign_signed() {
-        let mut a = Kilo::<U5>::new(3);
-        a -= Kilo::<U5>::new(2);
+        let mut a = Kilo::<P5>::new(3);
+        a -= Kilo::<P5>::new(2);
         assert_eq!(Kilo::new(1), a);
     }
 
