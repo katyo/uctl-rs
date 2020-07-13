@@ -1,13 +1,12 @@
-use super::{Cast, Fix, Mantissa, Positive, Radix};
-use typenum::Integer;
+use super::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 
 macro_rules! into_num {
     ($TYPE: ty, $KIND: tt) => {
         impl<R, B, E> From<Fix<R, B, E>> for $TYPE
         where
             R: Radix<B>,
-            B: Positive,
-            E: Integer,
+            B: Digits,
+            E: Exponent,
             $TYPE: Cast<Mantissa<R, B>>,
         {
             fn from(Fix { bits: value, .. }: Fix<R, B, E>) -> Self {

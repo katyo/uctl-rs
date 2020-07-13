@@ -1,6 +1,6 @@
 /*!
 
-# Fixed-point numbers
+# Flexible fixed-point numbers
 
 This crate intended to simplify fixed-point calculations especially on FPU-less hardware.
 To make it possible it introduces generic fixed-point type with usable and flexible operations on it.
@@ -9,33 +9,37 @@ To make it possible it introduces generic fixed-point type with usable and flexi
 
 The introduced numeric type is generic with three type parameters:
 
-* `Bits` - the number of valuable digits which represents __mantissa__
-* `Base` - the __base__ of type (2 for binary point, 10 for decimal point, etc.)
-* `Exp` - the __exponent__ of type
+* `Radix` - the __base__ of type, 2 for binary point, 10 for decimal point
+* `Digits` - the number of valuable digits which represents the __mantissa__
+* `Exponent` - the static __exponent__ value of type
 
-So the value of type can be represented as _`bits` × `Base` <sup>`Exp`</sup>_, where `bits` means mantissa value.
+So the value of type can be represented as _`mantissa` × `radix` <sup>`exponent`</sup>_.
 
 ```
 # use ufix::{Fix, bin, dec};
 # use typenum::*;
 #
-// Signed binary fixed with 5 bits mantissa and -3 exponent.
+// Signed binary fixed with 5 bits mantissa and -3 as exponent.
 // [5]*2^-3
-type BF1 = Fix<P5, U2, N3>;
-
-// Also as previous but using type alias.
+type BF1 = Fix<P2, P5, N3>;
+// or using type alias
 type BF2 = bin::Fix<P5, N3>;
 
-// Signed decimal fixed with 12 bits mantissa and -7 exponent.
+// Signed decimal fixed with 12 bits mantissa and -7 as exponent.
 // [12]*10^-7
-type DF1 = Fix<P12, U10, N7>;
+type DF1 = Fix<P10, P12, N7>;
 type DF2 = dec::Fix<P12, N7>;
+
+// Unsigned binary fixed with 5 bits mantissa and 3 as exponent.
+// [5]*2^3
+type UBF1 = Fix<U2, P5, P3>;
+// or using type alias
+type UBF2 = bin::UFix<P5, P3>;
 ```
 
-The `P*` type parameter means signed type.
-To create unsigned types you can use `U*` instead.
+The `P*` as the radix type parameter means signed type. To create unsigned types you can use `U*` instead.
 
-Unlike well known and widely used __Qn.m__ representation the exponent is not constrained by mantissa bits.
+Unlike well known and widely used __Qn.m__ representation the exponent is not constrained by mantissa bits. It can be less to represent more precisive small values. Also it can be greater than zero to represent less precision bigger values.
 
 ```
 # use ufix::Fix;
@@ -52,31 +56,23 @@ type BF2 = Fix<U5, U2, P7>;
 
 ### Optimization techniques
 
-When you targeted to [FPU](https://en.wikipedia.org/wiki/Floating-point_unit)-less hardware in order
-to get best possible performance and reduce firmware size you should use only binary fixed point arithmetic
-because internally it operates with integers, and exponent adjustement operations requires only
-bitwise shifting.
-Also you should avoid exceeding platform word size when it is possible without lossing required precision.
+When you targeted to [FPU](https://en.wikipedia.org/wiki/Floating-point_unit)-less hardware in order to get best possible performance and reduce firmware size you should use only binary fixed point arithmetic because internally it operates with integers, and exponent adjustement operations requires only bitwise shifting. Also you should avoid exceeding platform word size when it is possible without lossing required precision.
 
-By default this crate use 32-bit integers as optimal to use on 32-bit processors.
-When you targeted to 16-bit or 8-bit processor you should use *word16* or *word8* features respectively.
+By default this crate use 32-bit integers as optimal to use on 32-bit processors. When you targeted to 16-bit or 8-bit processor you should use *word16* or *word8* features respectively.
 
 ### Safe usage
 
-Fixed point arithmetic has well known problems with overflowing especially on multiplication.
-Also it has well known problems with precision loss on division.
+Fixed point arithmetic has well known problems with overflowing especially on multiplication. Also it has well known problems with precision loss on division.
 
 The simple way to avoid overflow is using value types of double bit-width in operation with following reducing to original width.
 
-For example, in case of multiplication we can cast 32-bit fixed-point number to 64-bit with same base and exponent.
-As result we get 64-bit fixed-point number with exponent, which equals a sum of arguments exponents.
+For example, in case of multiplication we can cast 32-bit fixed-point number to 64-bit with same base and exponent. As result we get 64-bit fixed-point number with exponent, which equals a sum of arguments exponents.
 
-In case of division to prevent lossing precision we can cast 32-bit numerator to 64-bit with double exponent and keep 32-bit denominator as is.
-In result we get 32-bit number with exponent, which equals a difference of numerator (after cast) and denominator exponents.
+In case of division to prevent lossing precision we can cast 32-bit numerator to 64-bit with double exponent and keep 32-bit denominator as is. In result we get 32-bit number with exponent, which equals a difference of numerator (after cast) and denominator exponents.
 
 See examples below:
 
-```rust
+```
 use ufix::{Cast, bin::{Fix}};
 use typenum::*;
 
@@ -134,6 +130,7 @@ mod into_number;
 mod operators;
 mod positive;
 mod radix;
+mod types;
 mod unsigned_pow;
 
 pub use aliases::*;
@@ -141,4 +138,5 @@ pub use cast::Cast;
 pub use fixed::Fix;
 pub use positive::{FromPositive, Positive};
 pub use radix::{Mantissa, Radix};
+pub use types::{Digits, Exponent};
 pub use unsigned_pow::UnsignedPow;

@@ -68,9 +68,8 @@ Support for `u128` and `i128` can be enabled through the `i128` Cargo feature.
 
  */
 
-use super::{Cast, Mantissa, Positive, Radix};
+use super::{Cast, Digits, Exponent, Mantissa, Radix};
 use core::marker::PhantomData;
-use typenum::Integer;
 
 /**
 
@@ -123,8 +122,8 @@ where
 impl<R, B, E> Fix<R, B, E>
 where
     R: Radix<B>,
-    B: Positive,
-    E: Integer,
+    B: Digits,
+    E: Exponent,
 {
     /// Creates a number.
     ///
@@ -147,7 +146,7 @@ where
     /// Converts to another _Exp_.
     fn into_exp<Er>(self) -> Fix<R, B, Er>
     where
-        Er: Integer,
+        Er: Exponent,
     {
         // radix^|exp-to_exp|
         let ratio = R::ratio((E::I32 - Er::I32).abs() as u32);
@@ -163,7 +162,7 @@ where
     fn into_bits<Br>(self) -> Fix<R, Br, E>
     where
         R: Radix<Br>,
-        Br: Positive,
+        Br: Digits,
         Mantissa<R, Br>: Cast<Mantissa<R, B>>,
     {
         Fix::new(Mantissa::<R, Br>::cast(self.bits))
@@ -186,11 +185,11 @@ where
     pub fn convert<Br, Er>(self) -> Fix<R, Br, Er>
     where
         R: Radix<Br>,
-        Er: Integer,
-        Br: Positive,
+        Er: Exponent,
+        Br: Digits,
         Mantissa<R, Br>: Cast<Mantissa<R, B>>,
     {
-        if B::U32 < Br::U32 {
+        if B::I32 < Br::I32 {
             self.into_bits::<Br>().into_exp::<Er>()
         } else {
             self.into_exp::<Er>().into_bits::<Br>()

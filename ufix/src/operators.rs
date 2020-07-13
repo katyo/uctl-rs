@@ -1,11 +1,11 @@
 // Allow due to unexpected behavior on it
 #![allow(clippy::type_repetition_in_bounds)]
 
-use super::{Cast, Fix, Mantissa, Positive, Radix};
+use super::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 use core::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
-use typenum::{Diff, Integer, Max, Maximum, Min, Minimum, Sum, P1};
+use typenum::{Diff, Max, Maximum, Min, Minimum, Sum, P1};
 
 pub trait Add1: Add<P1> {}
 
@@ -18,8 +18,8 @@ type Sum1<T> = <T as Add<P1>>::Output;
 impl<R, B, E> Neg for Fix<R, B, E>
 where
     R: Radix<B>,
-    B: Positive,
-    E: Integer,
+    B: Digits,
+    E: Exponent,
     Mantissa<R, B>: Neg<Output = Mantissa<R, B>>,
 {
     type Output = Self;
@@ -43,14 +43,14 @@ type SumT<R, B1, E1, B2, E2> = Fix<R, SumB<B1, E1, B2, E2>, SumE<E1, E2>>;
 impl<R, B1, E1, B2, E2> Add<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
     R: Radix<B1> + Radix<B2> + Radix<SumB<B1, E1, B2, E2>>,
-    B1: Positive + Add<E1>,
-    E1: Integer + Min<E2>,
-    B2: Positive + Add<E2>,
-    E2: Integer,
+    B1: Digits + Add<E1>,
+    E1: Exponent + Min<E2>,
+    B2: Digits + Add<E2>,
+    E2: Exponent,
     Sum<B1, E1>: Max<Sum<B2, E2>>,
     SumBovf<B1, E1, B2, E2>: Add1,
-    SumB<B1, E1, B2, E2>: Positive,
-    SumE<E1, E2>: Integer,
+    SumB<B1, E1, B2, E2>: Digits,
+    SumE<E1, E2>: Exponent,
     Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
     Mantissa<R, SumB<B1, E1, B2, E2>>: Cast<Mantissa<R, B1>>
         + Cast<Mantissa<R, B2>>
@@ -73,14 +73,14 @@ where
 impl<R, B1, E1, B2, E2> Sub<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
     R: Radix<B1> + Radix<B2> + Radix<SumB<B1, E1, B2, E2>>,
-    B1: Positive + Add<E1>,
-    E1: Integer + Min<E2>,
-    B2: Positive + Add<E2>,
-    E2: Integer,
+    B1: Digits + Add<E1>,
+    E1: Exponent + Min<E2>,
+    B2: Digits + Add<E2>,
+    E2: Exponent,
     Sum<B1, E1>: Max<Sum<B2, E2>>,
     SumBovf<B1, E1, B2, E2>: Add1,
-    SumB<B1, E1, B2, E2>: Positive,
-    SumE<E1, E2>: Integer,
+    SumB<B1, E1, B2, E2>: Digits,
+    SumE<E1, E2>: Exponent,
     Maximum<Sum<B1, E1>, Sum<B2, E2>>: Sub<Minimum<E1, E2>>,
     Mantissa<R, SumB<B1, E1, B2, E2>>: Cast<Mantissa<R, B1>>
         + Cast<Mantissa<R, B2>>
@@ -108,12 +108,12 @@ type ProdT<R, B1, E1, B2, E2> = Fix<R, ProdB<B1, B2>, ProdE<E1, E2>>;
 impl<R, B1, E1, B2, E2> Mul<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
     R: Radix<B1> + Radix<B2> + Radix<ProdB<B1, B2>>,
-    B1: Positive + Add<B2>,
-    E1: Integer + Add<E2>,
-    B2: Positive,
-    E2: Integer,
-    ProdB<B1, B2>: Positive,
-    ProdE<E1, E2>: Integer,
+    B1: Digits + Add<B2>,
+    E1: Exponent + Add<E2>,
+    B2: Digits,
+    E2: Exponent,
+    ProdB<B1, B2>: Digits,
+    ProdE<E1, E2>: Exponent,
     ProdM<R, B1, B2>:
         Cast<Mantissa<R, B1>> + Cast<Mantissa<R, B2>> + Mul<Output = ProdM<R, B1, B2>>,
 {
@@ -138,12 +138,12 @@ type QuotT<R, B1, E1, B2, E2> = Fix<R, QuotB<B1, B2>, QuotE<E1, E2>>;
 impl<R, B1, E1, B2, E2> Div<Fix<R, B2, E2>> for Fix<R, B1, E1>
 where
     R: Radix<B1> + Radix<B2> + Radix<QuotB<B1, B2>>,
-    B1: Positive + Sub<B2>,
-    E1: Integer + Sub<E2>,
-    B2: Positive,
-    E2: Integer,
-    QuotB<B1, B2>: Positive,
-    QuotE<E1, E2>: Integer,
+    B1: Digits + Sub<B2>,
+    E1: Exponent + Sub<E2>,
+    B2: Digits,
+    E2: Exponent,
+    QuotB<B1, B2>: Digits,
+    QuotE<E1, E2>: Exponent,
     QuotM<R, B1, B2>: Cast<Mantissa<R, B1>>,
     Mantissa<R, B1>: Cast<Mantissa<R, B2>> + Div<Output = Mantissa<R, B1>>,
 {
@@ -162,8 +162,8 @@ where
 impl<R, B, E> Rem for Fix<R, B, E>
 where
     R: Radix<B>,
-    B: Positive,
-    E: Integer,
+    B: Digits,
+    E: Exponent,
     Mantissa<R, B>: Rem<Output = Mantissa<R, B>>,
 {
     type Output = Self;

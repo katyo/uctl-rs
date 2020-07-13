@@ -1,13 +1,12 @@
-use super::{Cast, Fix, Mantissa, Positive, Radix};
-use typenum::Integer;
+use super::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 
 macro_rules! from_num {
     ($TYPE: ty, $KIND: tt) => {
         impl<R, B, E> From<$TYPE> for Fix<R, B, E>
         where
             R: Radix<B>,
-            B: Positive,
-            E: Integer,
+            B: Digits,
+            E: Exponent,
             $TYPE: Cast<Mantissa<R, B>>,
             Mantissa<R, B>: Cast<$TYPE>,
         {

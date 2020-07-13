@@ -1,13 +1,12 @@
-use crate::{Cast, Fix, Mantissa, Positive, Radix};
-use typenum::Integer;
+use crate::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 
 macro_rules! cast_from {
     ($type: ty) => {
         impl<R, B, E> Cast<$type> for Fix<R, B, E>
         where
             R: Radix<B>,
-            B: Positive,
-            E: Integer,
+            B: Digits,
+            E: Exponent,
             $type: Cast<Mantissa<R, B>>,
             Mantissa<R, B>: Cast<$type>,
         {
@@ -19,8 +18,8 @@ macro_rules! cast_from {
         impl<R, B, E> Cast<Fix<R, B, E>> for $type
         where
             R: Radix<B>,
-            B: Positive,
-            E: Integer,
+            B: Digits,
+            E: Exponent,
             $type: Cast<Mantissa<R, B>>,
         {
             fn cast(val: Fix<R, B, E>) -> $type {
@@ -50,10 +49,10 @@ cast_from!(f64);
 impl<R, B, Br, E, Er> Cast<Fix<R, B, E>> for Fix<R, Br, Er>
 where
     R: Radix<B> + Radix<Br>,
-    B: Positive,
-    Br: Positive,
-    E: Integer,
-    Er: Integer,
+    B: Digits,
+    E: Exponent,
+    Br: Digits,
+    Er: Exponent,
     Mantissa<R, Br>: Cast<Mantissa<R, B>>,
 {
     fn cast(value: Fix<R, B, E>) -> Self {
