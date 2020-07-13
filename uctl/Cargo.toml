@@ -15,8 +15,8 @@ travis-ci = { repoitory = "katyo/ucontrol" }
 maintenance = { status = "experimental" }
 
 [dependencies]
-typenum = "1"
-generic-array = "0.13"
+typenum = "^1"
+generic-array = "^0.14"
 
 [dependencies.ufix]
 version = "0.1"
