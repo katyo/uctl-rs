@@ -9,6 +9,11 @@ matrix:
   fast_finish: true
   allow_failures:
   - rust: nightly
+  include:
+  - stage: publish
+    if: (type = push) && (tag =~ /^\d+\.\d+\.\d+/)
+    script:
+    - (cd ufix && cargo publish || true)
 before_script:
 - if [ "$TRAVIS_RUST_VERSION" != "nightly" ]; then rustup component add clippy rustfmt; fi
 script:
