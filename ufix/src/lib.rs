@@ -98,6 +98,14 @@ let c = Fix::<P32, N16>::cast(a) / b;
 assert_eq!(c, Fix::<P16, N8>::from(1.5647));
 ```
 
+### Supported features
+
+This crate is `no_std` by design.
+
+This crate supports the mantissa up to _64-bit_. Support for up to _128-bit_ can be enabled using the __i128__ feature.
+
+The __word8__ and __word16__ features can reduce minimum mantissa size to 8 and 16 bits respectively. By default at least 32-bit words will be used.
+
 ### Evolution of `Fix` type
 
 0. **fix** crate by _Curtis McEnroe_.

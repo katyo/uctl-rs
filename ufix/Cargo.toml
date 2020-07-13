@@ -19,7 +19,6 @@ typenum = "^1"
 
 [features]
 default = []
-no_std = ["typenum/no_std"]
 i128 = ["typenum/i128"]
 word8 = []
 word16 = []

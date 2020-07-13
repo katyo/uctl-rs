@@ -43,10 +43,10 @@ assert_eq!(Milli::<P4>::new(0_300), Centi::<P4>::new(0_30).convert());
 We can also choose a base-2 scale just as easily.
 
 ```
-use typenum::P5;
+use typenum::P10;
 use ufix::iec::{Kibi, Mebi};
 
-assert_eq!(Kibi::<P5>::new(1024), Mebi::<P5>::new(1).convert());
+assert_eq!(Kibi::<P10>::new(1024), Mebi::<P10>::new(1).convert());
 ```
 
 It's also worth noting that the type-level scale changes when multiplying and dividing, avoiding any implicit conversion.
@@ -57,14 +57,6 @@ use ufix::iec::{Gibi, Kibi, Mebi};
 
 assert_eq!(Mebi::<P1>::new(3), Gibi::<P2>::new(6) / Kibi::<P1>::new(2));
 ```
-
-# `no_std`
-
-This crate is `no_std`.
-
-# `i128` support
-
-Support for `u128` and `i128` can be enabled through the `i128` Cargo feature.
 
  */
 
@@ -173,11 +165,11 @@ where
     /// # Examples
     ///
     /// ```
-    /// use typenum::P1;
+    /// use typenum::{P1, P7};
     /// use ufix::si::{Kilo, Milli};
     ///
     /// let kilo = Kilo::<P1>::new(5);
-    /// let milli = Milli::<P1>::new(5_000_000);
+    /// let milli = Milli::<P7>::new(5_000_000);
     ///
     /// assert_eq!(kilo, milli.convert());
     /// assert_eq!(milli, kilo.convert());

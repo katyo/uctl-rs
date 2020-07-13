@@ -24,5 +24,4 @@ path = "../ufix"
 
 [features]
 default = []
-no_std = ["typenum/no_std", "ufix/no_std"]
 i128 = ["typenum/i128", "ufix/i128"]
