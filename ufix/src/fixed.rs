@@ -106,7 +106,7 @@ __TODO__: Update outdated docs
 To compare fixed-point values of different types you should first cast at least one of its to type of other or cast both to single common type. Implicit semi-automatic conversion lacks because in common case it may give ambiguous results.
 
  */
-#[derive(Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Default)]
 #[repr(transparent)]
 pub struct Fix<R, B, E>
 where

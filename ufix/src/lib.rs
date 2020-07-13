@@ -141,6 +141,7 @@ mod aliases;
 mod arithmetic;
 mod cast;
 mod cast_fixed;
+mod comparison;
 mod fixed;
 mod format;
 mod from_number;
