@@ -1,11 +1,28 @@
 language: rust
 rust:
-  - stable
-  - beta
-  - nightly
+- stable
+- beta
+- nightly
+cache:
+  cargo: true
 matrix:
-  allow_failures:
-    - rust: nightly
   fast_finish: true
+  allow_failures:
+  - rust: nightly
+before_script:
+- rustup component add clippy rustfmt
 script:
-  - cargo test --verbose --all
+- cargo clippy --all -- -D warnings
+- cargo fmt --all -- --check
+- cargo doc --all
+- cargo test --all
+- (cd ufix; cargo test --features no_std)
+- (cd uctl; cargo test --features i128)
+- (cd ufix; cargo test --features no_std,i128)
+- (cd ufix; cargo test --features word8)
+- (cd ufix; cargo test --features word16)
+- (cd ufix; cargo test --features word8,i128)
+- (cd ufix; cargo test --features word16,i128)
+- (cd uctl; cargo test --features no_std)
+- (cd uctl; cargo test --features i128)
+- (cd uctl; cargo test --features no_std,i128)
