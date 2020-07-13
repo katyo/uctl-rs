@@ -28,7 +28,8 @@ In any case you should create specific tests to be sure in correctness of operat
 
  */
 
-#![cfg_attr(feature = "no_std", no_std)]
+#![no_std]
+#![forbid(unsafe_code)]
 
 mod filter;
 mod regulator;

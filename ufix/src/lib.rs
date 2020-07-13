@@ -118,7 +118,8 @@ assert_eq!(c, Fix::<P16, N8>::from(1.5647));
 
  */
 
-#![cfg_attr(feature = "no_std", no_std)]
+#![no_std]
+#![forbid(unsafe_code)]
 
 mod aliases;
 mod cast;
