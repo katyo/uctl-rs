@@ -1,7 +1,7 @@
 # Generic control library for low-end hadrware
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Travis-CI Build Status](https://travis-ci.org/katyo/ucontrol.svg?branch=master)](https://travis-ci.org/katyo/ucontrol)
+[![Travis-CI Build Status](https://travis-ci.com/katyo/uctl-rs.svg?branch=master)](https://travis-ci.com/katyo/uctl-rs)
 [![Crates.io Package](https://img.shields.io/crates/v/uctl.svg?style=popout)](https://crates.io/crates/uctl)
 [![Docs.rs API Documentation](https://docs.rs/uctl/badge.svg)](https://docs.rs/uctl)
 
