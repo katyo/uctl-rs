@@ -10,14 +10,13 @@ See also [Finite impulse response](https://en.wikipedia.org/wiki/Finite_impulse_
 
 */
 
-use crate::{DelayLine, Transducer};
+use crate::{Cast, DelayLine, Transducer};
 use core::{
     marker::PhantomData,
     ops::{Add, Mul},
 };
 use generic_array::{ArrayLength, GenericArray};
 use typenum::{Add1, NonZero, Prod, Sum, Unsigned, B1};
-use ufix::Cast;
 
 /// FIR filter parameters
 ///

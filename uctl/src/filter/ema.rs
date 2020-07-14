@@ -19,13 +19,12 @@ See also [Exponential moving average](https://en.wikipedia.org/wiki/Moving_avera
 
 */
 
-use crate::Transducer;
+use crate::{Cast, Transducer};
 use core::{
     marker::PhantomData,
     ops::{Add, Div, Mul, Sub},
 };
 use typenum::{Diff, Prod, Quot, Sum};
-use ufix::Cast;
 
 /**
 EMA filter parameters

@@ -25,13 +25,12 @@ See also [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter) article.
 
  */
 
-use crate::Transducer;
+use crate::{Cast, Transducer};
 use core::{
     marker::PhantomData,
     ops::{Add, Div, Mul, Sub},
 };
 use typenum::{Diff, Prod, Quot, Sum};
-use ufix::Cast;
 
 /**
 LQE filter parameters
