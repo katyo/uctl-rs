@@ -17,6 +17,7 @@ maintenance = { status = "experimental" }
 [dependencies]
 typenum = "^1"
 generic-array = "^0.14"
+derive_deref = "^1"
 
 [dependencies.ufix]
 version = "0.1"

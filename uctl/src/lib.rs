@@ -36,6 +36,7 @@ mod consts;
 mod filter;
 mod regulator;
 mod transform;
+mod trigonometry;
 mod types;
 mod utils;
 
@@ -43,5 +44,6 @@ pub use consts::*;
 pub use filter::*;
 pub use regulator::*;
 pub use transform::*;
+pub use trigonometry::*;
 pub use types::*;
 pub use utils::*;
