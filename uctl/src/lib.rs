@@ -30,13 +30,18 @@ In any case you should create specific tests to be sure in correctness of operat
 
 #![no_std]
 #![forbid(unsafe_code)]
+#![forbid(missing_docs)]
 
+mod consts;
 mod filter;
 mod regulator;
 mod transform;
 mod types;
+mod utils;
 
+pub use consts::*;
 pub use filter::*;
 pub use regulator::*;
 pub use transform::*;
 pub use types::*;
+pub use utils::*;
