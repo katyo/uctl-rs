@@ -1,12 +1,20 @@
-use crate::Transducer;
+/*!
+
+Simple scaler for scalar values
+
+*/
+
+use crate::{Cast, Transducer};
 use core::{
     marker::PhantomData,
     ops::{Add, Div, Mul, RangeInclusive, Sub},
 };
 use typenum::{Diff, Prod, Quot, Sum};
-use ufix::Cast;
 
-/**
+/** Scaler parameters
+
+- `F` - scale factor type
+- `O` - output value type
 
 y = (x - x0) / (x1 - x0) * (y1 - y0) + y0;
 
@@ -17,7 +25,6 @@ factor = (y1 - y0) / (x1 - x0);
 offset = y0 - x0 * factor;
 
 y = x * factor + offset;
-
 */
 pub struct Param<F, O> {
     factor: F,
@@ -25,6 +32,7 @@ pub struct Param<F, O> {
 }
 
 impl<F, O> Param<F, O> {
+    /// Create scaler parameters
     pub fn new<I>(from: RangeInclusive<I>, to: RangeInclusive<O>) -> Self
     where
         I: Copy + Sub<I>,
@@ -47,6 +55,12 @@ impl<F, O> Param<F, O> {
     }
 }
 
+/** Scaler state
+
+- `I` - input value type
+- `O` - output value type
+- `F` - scale factor type
+ */
 pub struct Scaler<I, O, F> {
     val: PhantomData<(I, O, F)>,
 }

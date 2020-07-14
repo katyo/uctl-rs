@@ -61,6 +61,7 @@ transducer_tuple!(N, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E =>
 transducer_tuple!(O, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12, N: M => 13, O: N => 14);
 transducer_tuple!(P, A => 0, B: A => 1, C: B => 2, D: C => 3, E: D => 4, F: E => 5, G: F => 6, H: G => 7, I: H => 8, J: I => 9, K: J => 10, L: K => 11, M: L => 12, N: M => 13, O: N => 14, P: O => 15);
 
+/// The wrapper for functions to use as transducer
 pub struct FnTransducer<I, O>(PhantomData<(I, O)>);
 
 impl<I, O> Transducer for FnTransducer<I, O> {

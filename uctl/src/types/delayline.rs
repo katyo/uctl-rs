@@ -7,7 +7,9 @@ pub trait DelayLine
 where
     for<'a> &'a Self: IntoIterator<Item = <Self as DelayLine>::Value>,
 {
+    /// The type of element
     type Value: Copy;
+    /// The length of line
     type Length: Unsigned + NonZero;
 
     /// Push new value to line

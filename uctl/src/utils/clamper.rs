@@ -1,10 +1,21 @@
+/*!
+
+Simple clamper for scalar values
+
+*/
+
 use crate::Transducer;
 use core::{
     marker::PhantomData,
-    //ops::{RangeFrom, RangeToInclusive, RangeInclusive, RangeFull},
     ops::{Bound::*, RangeBounds},
 };
 
+/**
+The clamper
+
+- `R` - value range type
+- `T` - clamping value type
+*/
 pub struct Clamper<R, T> {
     val: PhantomData<(R, T)>,
 }
