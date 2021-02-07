@@ -8,6 +8,11 @@
 This library intended to simplify developing control algorithms for bare-metal low-end hardware such as
 microcontrollers.
 
+## Current status
+
+Currently Rust is quite restricted in using constants as a type parameters. To get the original ideas works well it requires support for floating-point operations at type level which implement only the languages with fullfeatured compile-time expression evaluation like D and C++ (with restrictions and quirks).
+Due to reasons above the development currently focussed on [uctl-d](https://github.com/katyo/uctl-d).
+
 ## Overview
 
 This library consist of several independent components which grouped to filters, regulators and convertors.
