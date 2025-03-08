@@ -1,9 +1,8 @@
 # Generic control library for low-end hadrware
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Travis-CI Build Status](https://travis-ci.com/katyo/uctl-rs.svg?branch=master)](https://travis-ci.com/katyo/uctl-rs)
-[![Crates.io Package](https://img.shields.io/crates/v/uctl.svg?style=popout)](https://crates.io/crates/uctl)
-[![Docs.rs API Documentation](https://docs.rs/uctl/badge.svg)](https://docs.rs/uctl)
+[![github](https://img.shields.io/badge/github-katyo/uctl--rs-8da0cb.svg?style=for-the-badge&logo=github)](https://github.com/katyo/uctl-rs)
+[![MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![CI](https://img.shields.io/github/actions/workflow/status/katyo/uctl-rs/ci.yml?branch=master&style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/katyo/ufix-rs/actions?query=workflow%3ARust)
 
 This library intended to simplify developing control algorithms for bare-metal low-end hardware such as
 microcontrollers.
