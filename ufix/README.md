@@ -25,13 +25,13 @@ type BF2 = bin::Fix<P5, N3>;
 
 // Unsigned binary fixed with 5 bits mantissa and 3 as exponent.
 // [5]*2^3
-type BF1 = Fix<U2, P5, P3>;
+type UBF1 = Fix<U2, P5, P3>;
 // or using type alias
-type BF2 = bin::UFix<P5, P3>;
+type UBF2 = bin::UFix<P5, P3>;
 
 // Signed decimal fixed with 12 digits mantissa and -7 as exponent.
 // [12]*10^-7
-type DF1 = Fix<P12, U10, N7>;
+type DF1 = Fix<U10, P12, N7>;
 type DF2 = dec::Fix<P12, N7>;
 ```
 
@@ -58,7 +58,7 @@ This crate avoids both overflows and precision losses by adjusting mantissa widt
 
 See examples below:
 
-```
+```rust
 use ufix::{Cast, bin::{Fix}};
 use typenum::*;
 

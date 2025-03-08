@@ -1,27 +1,20 @@
 [package]
 name = "uctl"
-version = "0.1.0"
-authors = ["K. <kayo@illumium.org>"]
 description = "Generic control library for low-end hardware"
-edition = "2018"
-repository = "https://github.com/katyo/uctl-rs"
-license = "MIT"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
 readme = "README.md"
 keywords = ["fixed-point", "filter", "regulator", "control", "embedded"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
-[badges]
-travis-ci = { repository = "katyo/uctl-rs", tld = "com" }
-maintenance = { status = "experimental" }
-
 [dependencies]
-typenum = "^1"
-generic-array = "^0.14"
-derive_deref = "^1"
-
-[dependencies.ufix]
-version = "0.1"
-path = "../ufix"
+typenum.workspace = true
+generic-array.workspace = true
+derive_deref.workspace = true
+ufix.workspace = true
 
 [features]
 default = []

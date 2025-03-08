@@ -19,7 +19,7 @@ use typenum::NonZero;
 pub struct Store<T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     /// Statically sized storage for all available values
     data: GenericArray<T, N>,
@@ -30,7 +30,7 @@ where
 impl<T, N> From<T> for Store<T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     fn from(value: T) -> Self {
         Self {
@@ -43,7 +43,7 @@ where
 impl<T, N> DelayLine for Store<T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     type Value = T;
     type Length = N;
@@ -64,7 +64,7 @@ where
 impl<'a, T, N> IntoIterator for &'a Store<T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     type Item = T;
     type IntoIter = Iter<'a, T, N>;
@@ -81,7 +81,7 @@ where
 pub struct Iter<'a, T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     /// Delay line
     line: &'a Store<T, N>,
@@ -92,7 +92,7 @@ where
 impl<'a, T, N> Iterator for Iter<'a, T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     type Item = T;
 
@@ -120,7 +120,7 @@ where
 impl<'a, T, N> ExactSizeIterator for Iter<'a, T, N>
 where
     T: Copy,
-    N: ArrayLength<T> + NonZero,
+    N: ArrayLength + NonZero,
 {
     fn len(&self) -> usize {
         if self.item != usize::MAX {

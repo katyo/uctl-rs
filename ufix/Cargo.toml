@@ -1,24 +1,28 @@
 [package]
 name = "ufix"
-version = "0.1.0"
-authors = ["K. <kayo@illumium.org>"]
 description = "Flexible and usable generic fixed-point numeric type"
-edition = "2018"
-repository = "https://github.com/katyo/uctl-rs"
-license = "MIT"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
 readme = "README.md"
 keywords = ["fixed-point", "number", "typenum", "embedded", "no-std"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
-[badges]
-travis-ci = { repository = "katyo/uctl-rs", tld = "com" }
-maintenance = { status = "experimental" }
-
 [dependencies]
-typenum = "^1"
+typenum.workspace = true
 
 [dependencies.hash32]
-version = "^0.1"
+workspace = true
+optional = true
+
+[dependencies.bitcode]
+workspace = true
+optional = true
+
+[dependencies.serde]
+workspace = true
 optional = true
 
 [features]
@@ -26,3 +30,4 @@ default = []
 i128 = ["typenum/i128"]
 word8 = []
 word16 = []
+std = ["bitcode?/std", "serde?/std"]

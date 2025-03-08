@@ -46,7 +46,7 @@ where
     L: DelayLine,
     for<'a> &'a L: IntoIterator<Item = L::Value>,
     L::Length: Add<B1>,
-    Add1<L::Length>: ArrayLength<B> + NonZero + Unsigned,
+    Add1<L::Length>: ArrayLength + NonZero + Unsigned,
 {
     type Input = L::Value;
     type Output = O;

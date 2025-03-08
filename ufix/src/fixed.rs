@@ -106,7 +106,7 @@ __TODO__: Update outdated docs
 To compare fixed-point values of different types you should first cast at least one of its to type of other or cast both to single common type. Implicit semi-automatic conversion lacks because in common case it may give ambiguous results.
 
  */
-#[derive(Copy, Clone, Default)]
+#[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Fix<R, B, E>
 where
@@ -119,12 +119,20 @@ where
     pub exp: PhantomData<E>,
 }
 
+//impl<R: Clone, B: Clone, E: Clone> Copy for Fix<R, B, E> {}
+
 impl<R, B, E> Fix<R, B, E>
 where
     R: Radix<B>,
     B: Digits,
     E: Exponent,
 {
+    /// Minimum value
+    pub const MIN: Self = Self::new(R::MIN);
+
+    /// Maximum value
+    pub const MAX: Self = Self::new(R::MAX);
+
     /// Creates a number.
     ///
     /// # Examples
@@ -136,7 +144,7 @@ where
     /// Milli::<P2>::new(25); // 0.025
     /// Kilo::<P2>::new(25); // 25 000
     /// ```
-    pub fn new(bits: R::Type) -> Self {
+    pub const fn new(bits: R::Type) -> Self {
         Fix {
             bits,
             exp: PhantomData,

@@ -1,5 +1,35 @@
 [workspace]
+resolver = "2"
 members = [
   "ufix",
   "uctl",
 ]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["K. <kayo@illumium.org>"]
+edition = "2021"
+repository = "https://github.com/katyo/uctl-rs"
+license = "MIT"
+
+[workspace.dependencies]
+typenum = "1"
+hash32 = "0.3"
+generic-array = "1"
+derive_deref = "1"
+
+[workspace.dependencies.bitcode]
+version = "0.6"
+default-features = false
+
+[workspace.dependencies.serde]
+version = "1"
+default-features = false
+
+[workspace.dependencies.ufix]
+version = "0.1"
+path = "ufix"
+
+[workspace.dependencies.uctl]
+version = "0.1"
+path = "uctl"

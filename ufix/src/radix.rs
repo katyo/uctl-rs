@@ -2,13 +2,19 @@ use crate::{FromPositive, Positive, UnsignedPow};
 use core::ops::{Div, Mul};
 
 /// The trait which infers type for store the value according to given radix parameter
-pub trait Radix<B>: Positive {
+pub trait Radix<B>: Positive + Copy {
     /// The integer type which can hold required number of digits with this radix
     type Type: Sized
+        + Copy
         + FromPositive
         + UnsignedPow
         + Mul<Output = Self::Type>
         + Div<Output = Self::Type>;
+
+    /// Minimum value of integer type
+    const MIN: Self::Type;
+    /// Maximum value of integer type
+    const MAX: Self::Type;
 
     /// Get ratio of integer type which can be used to adjust mantissa value with given exponent
     fn ratio(exp: u32) -> Self::Type
@@ -28,6 +34,8 @@ macro_rules! radix_impl {
     ( $($radix: ident: $($type: ty: $($width: ident)+),+;)+ ) => { $($($(
         impl Radix<typenum::$width> for typenum::$radix {
             type Type = $type;
+            const MIN: Self::Type = <$type>::MIN;
+            const MAX: Self::Type = <$type>::MAX;
         }
     )+)+)+ };
 }
