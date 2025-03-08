@@ -13,10 +13,6 @@ categories = ["algorithms", "data-structures", "embedded", "no-std"]
 [dependencies]
 typenum.workspace = true
 
-[dependencies.hash32]
-workspace = true
-optional = true
-
 [dependencies.bitcode]
 workspace = true
 optional = true
