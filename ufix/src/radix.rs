@@ -108,7 +108,7 @@ radix_impl! {
 
 // 128
 #[cfg(feature = "i128")]
-mod _128 {
+mod _128_impl {
     use super::Radix;
 
     mod _128 {

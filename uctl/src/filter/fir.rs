@@ -96,6 +96,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::zero_prefixed_literal)]
     fn fir_fix_base10_n3() {
         type I = si::Micro<P8>;
         type O = si::Nano<P16>;

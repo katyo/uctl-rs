@@ -87,13 +87,13 @@ __TODO__: Update outdated docs
 - _−(x B<sup>E</sup>) = (−x) B<sup>E</sup>_
 
 - _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) + (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
-   (x + y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
+  (x + y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
 
 - _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) - (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
-   (x - y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
+  (x - y)<sub>max M<sub>x</sub> M<sub>y</sub></sub> B<sup>min E<sub>x</sub> E<sub>y</sub></sup>_
 
 - _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) × (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
-   (x × y)<sub>M<sub>x</sub> + M<sub>y</sub></sub> B<sup>E<sub>x</sub> + E<sub>y</sub></sup>_
+  (x × y)<sub>M<sub>x</sub> + M<sub>y</sub></sub> B<sup>E<sub>x</sub> + E<sub>y</sub></sup>_
 
 - _(x<sub>M<sub>x</sub></sub> B<sup>E<sub>x</sub></sup>) ÷ (y<sub>M<sub>y</sub></sub> B<sup>E<sub>y</sub></sup>) =
   (x ÷ y)<sub>M<sub>x</sub> - M<sub>y</sub></sub> B<sup>E<sub>x</sub> − E<sub>y</sub></sup>_
@@ -157,7 +157,7 @@ where
         Er: Exponent,
     {
         // radix^|exp-to_exp|
-        let ratio = R::ratio((E::I32 - Er::I32).abs() as u32);
+        let ratio = R::ratio((E::I32 - Er::I32).unsigned_abs());
 
         if E::I32 < Er::I32 {
             Fix::new(self.bits / ratio)

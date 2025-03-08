@@ -104,7 +104,7 @@ impl<R, B, E> SealedVis<R, B, E> {
     }
 }
 
-impl<'de, R, B, E> Visitor<'de> for SealedVis<R, B, E>
+impl<R, B, E> Visitor<'_> for SealedVis<R, B, E>
 where
     R: Radix<B>,
     B: Digits,

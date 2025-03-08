@@ -264,8 +264,8 @@ mod tests {
     fn add_signed() {
         assert_eq!(Kilo::<P2>::new(3), Kilo::<P1>::new(1) + Kilo::<P1>::new(2));
         assert_eq!(
-            Centi::<P4>::new(0_30),
-            Centi::<P3>::new(0_10) + Centi::<P3>::new(0_20)
+            Centi::<P4>::new(30),
+            Centi::<P3>::new(10) + Centi::<P3>::new(20)
         );
     }
 
@@ -276,8 +276,8 @@ mod tests {
             UKilo::<P2>::new(3)
         );
         assert_eq!(
-            UCenti::<P3>::new(0_10) + UCenti::<P3>::new(0_20),
-            UCenti::<P4>::new(0_30)
+            UCenti::<P3>::new(10) + UCenti::<P3>::new(20),
+            UCenti::<P4>::new(30)
         );
     }
 

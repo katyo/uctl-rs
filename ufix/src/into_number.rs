@@ -11,7 +11,7 @@ macro_rules! into_num {
         {
             fn from(Fix { bits: value, .. }: Fix<R, B, E>) -> Self {
                 // radix^|exp|
-                let ratio = R::ratio(E::I32.abs() as u32);
+                let ratio = R::ratio(E::I32.unsigned_abs());
 
                 // TODO: Add rounding
 
@@ -105,7 +105,7 @@ mod test {
 
     #[test]
     fn into_f32() {
-        let a = Milli::<P4>::new(0_100);
+        let a = Milli::<P4>::new(100);
         assert_eq!(f32::from(a), 0.1);
 
         let a = Milli::<P4>::new(-2_500);
@@ -114,7 +114,7 @@ mod test {
 
     #[test]
     fn into_f64() {
-        let a = Milli::<P4>::new(0_100);
+        let a = Milli::<P4>::new(100);
         assert_eq!(f64::from(a), 0.1);
 
         let a = Milli::<P4>::new(-2_500);

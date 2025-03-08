@@ -57,12 +57,12 @@ mod test {
 
     #[test]
     fn pi_float_32() {
-        assert_eq!(pi::<f32>(), 3.1415927);
+        assert_eq!(pi::<f32>(), core::f32::consts::PI);
     }
 
     #[test]
     fn pi_float_64() {
-        assert_eq!(pi::<f64>(), 3.141592653589793);
+        assert_eq!(pi::<f64>(), core::f64::consts::PI);
     }
 
     #[test]
@@ -82,13 +82,16 @@ mod test {
 
     #[test]
     fn pi_fix_p2_63n60() {
-        assert_eq!(f64::cast(pi::<Fix<P2, P63, N60>>()), 3.141592653589793);
+        assert_eq!(f64::cast(pi::<Fix<P2, P63, N60>>()), core::f64::consts::PI);
     }
 
     #[cfg(feature = "i128")]
     #[test]
     fn pi_fix_p2_128n124() {
-        assert_eq!(f64::cast(pi::<Fix<P2, P128, N124>>()), 3.141592653589793);
+        assert_eq!(
+            f64::cast(pi::<Fix<P2, P128, N124>>()),
+            core::f64::consts::PI
+        );
     }
 
     #[test]
@@ -102,17 +105,18 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::approx_constant)]
     fn pi_fix_p10_12n10() {
         assert_eq!(f64::cast(pi::<Fix<P10, P12, N10>>()), 3.1415926535);
     }
 
     #[test]
     fn pi_fix_p10_18n16() {
-        assert_eq!(f64::cast(pi::<Fix<P10, P18, N16>>()), 3.141592653589793);
+        assert_eq!(f64::cast(pi::<Fix<P10, P18, N16>>()), core::f64::consts::PI);
     }
 
     #[test]
     fn pi_fix_u10_16n15() {
-        assert_eq!(f64::cast(pi::<Fix<U10, P16, N15>>()), 3.141592653589793);
+        assert_eq!(f64::cast(pi::<Fix<U10, P16, N15>>()), core::f64::consts::PI);
     }
 }

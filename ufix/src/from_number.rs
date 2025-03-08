@@ -12,7 +12,7 @@ macro_rules! from_num {
         {
             fn from(value: $TYPE) -> Self {
                 // radix^|exp|
-                let ratio = R::ratio(E::I32.abs() as u32);
+                let ratio = R::ratio(E::I32.unsigned_abs());
                 // TODO: Add rounding
                 Self::new(if 0 < E::I32 {
                     from_num!(@$KIND, /, $TYPE, Mantissa<R, B>, value, ratio)
@@ -99,7 +99,7 @@ mod test {
     #[test]
     fn from_f32() {
         let a = Milli::<P4>::from(0.1f32);
-        assert_eq!(a, Milli::new(0_100));
+        assert_eq!(a, Milli::new(100));
 
         let a = Milli::<P4>::from(-2.5f32);
         assert_eq!(a, -Milli::new(2_500));
@@ -108,7 +108,7 @@ mod test {
     #[test]
     fn from_f64() {
         let a = Milli::<P4>::from(0.1f64);
-        assert_eq!(a, Milli::new(0_100));
+        assert_eq!(a, Milli::new(100));
 
         let a = Milli::<P4>::from(-2.5f64);
         assert_eq!(a, -Milli::new(2_500));

@@ -7,10 +7,7 @@ This module implements delay line which pre-initialized with some value.
 */
 
 use super::DelayLine;
-use core::{
-    iter::{repeat, FromIterator, IntoIterator},
-    usize,
-};
+use core::iter::{repeat_n, FromIterator, IntoIterator};
 use generic_array::{ArrayLength, GenericArray};
 use typenum::NonZero;
 
@@ -34,7 +31,7 @@ where
 {
     fn from(value: T) -> Self {
         Self {
-            data: FromIterator::from_iter(repeat(value).take(Self::max_len())),
+            data: FromIterator::from_iter(repeat_n(value, Self::max_len())),
             tail: 0,
         }
     }
@@ -89,7 +86,7 @@ where
     item: usize,
 }
 
-impl<'a, T, N> Iterator for Iter<'a, T, N>
+impl<T, N> Iterator for Iter<'_, T, N>
 where
     T: Copy,
     N: ArrayLength + NonZero,
@@ -117,7 +114,7 @@ where
     }
 }
 
-impl<'a, T, N> ExactSizeIterator for Iter<'a, T, N>
+impl<T, N> ExactSizeIterator for Iter<'_, T, N>
 where
     T: Copy,
     N: ArrayLength + NonZero,
