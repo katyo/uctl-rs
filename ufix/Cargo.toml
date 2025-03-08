@@ -30,6 +30,7 @@ serde_json.workspace = true
 
 [features]
 default = []
+all = ["word8", "word16", "i128", "serde", "std"]
 i128 = ["typenum/i128"]
 word8 = []
 word16 = []

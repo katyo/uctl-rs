@@ -18,4 +18,5 @@ ufix.workspace = true
 
 [features]
 default = []
+all = ["i128"]
 i128 = ["typenum/i128", "ufix/i128"]
