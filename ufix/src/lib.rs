@@ -18,8 +18,8 @@ mod radix;
 mod types;
 mod unsigned_pow;
 
-#[cfg(feature = "bitcode")]
-mod bitcode_impl;
+//#[cfg(feature = "bitcode")]
+//mod bitcode_impl;
 
 #[cfg(feature = "serde")]
 mod serde_impl;
