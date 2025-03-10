@@ -1,4 +1,4 @@
-use crate::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
+use crate::{Digits, Error, Exponent, Fix, Mantissa, Radix, TryCast};
 use core::fmt;
 use serde::{
     de::{Deserializer, Error as DeError, Visitor},
@@ -88,8 +88,8 @@ macro_rules! sealed_impls {
 }
 
 sealed_impls! {
-    serialize_f32, deserialize_f32: u8, u16, u32, i8, i16, i32, f32;
-    serialize_f64, deserialize_f64: i64, u64, f64;
+    serialize_f32, deserialize_f32: u8, u16, i8, i16;
+    serialize_f64, deserialize_f64: i32, u32, i64, u64;
 }
 
 struct SealedVis<R, B, E> {
@@ -104,167 +104,51 @@ impl<R, B, E> SealedVis<R, B, E> {
     }
 }
 
-impl<R, B, E> Visitor<'_> for SealedVis<R, B, E>
-where
-    R: Radix<B>,
-    B: Digits,
-    E: Exponent,
-    u8: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<u8>,
-    i8: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<i8>,
-    u16: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<u16>,
-    i16: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<i16>,
-    u32: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<u32>,
-    i32: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<i32>,
-    u64: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<u64>,
-    i64: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<i64>,
-    f32: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<f32>,
-    f64: Cast<Mantissa<R, B>>,
-    Mantissa<R, B>: Cast<f64>,
-{
-    type Value = Fix<R, B, E>;
+fn err_to_de<E: DeError>(error: Error) -> E {
+    DeError::custom(error)
+}
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a floating-point value")
-    }
+macro_rules! visitor_impl {
+    ($($type:ident: $func:ident;)*) => {
+        impl<R, B, E> Visitor<'_> for SealedVis<R, B, E>
+        where
+            R: Radix<B>,
+            B: Digits,
+            E: Exponent,
+            $(
+                $type: TryCast<Mantissa<R, B>>,
+                Mantissa<R, B>: TryCast<$type>,
+            )*
+        {
+            type Value = Fix<R, B, E>;
 
-    fn visit_u8<F>(self, value: u8) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < u8::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > u8::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a numeric value")
+            }
+
+            $(
+                fn $func<F>(self, value: $type) -> Result<Self::Value, F>
+                where
+                    F: DeError,
+                {
+                    Self::Value::try_cast(value).map_err(err_to_de)
+                }
+            )*
         }
-    }
+    };
+}
 
-    fn visit_i8<F>(self, value: i8) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < i8::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > i8::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_u16<F>(self, value: u16) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < u16::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > u16::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_i16<F>(self, value: i16) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < i16::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > i16::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_u32<F>(self, value: u32) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < u32::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > u32::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_i32<F>(self, value: i32) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < i32::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > i32::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_u64<F>(self, value: u64) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < u64::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > u64::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_i64<F>(self, value: i64) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < i64::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > i64::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_f32<F>(self, value: f32) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < f32::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > f32::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
-
-    fn visit_f64<F>(self, value: f64) -> Result<Self::Value, F>
-    where
-        F: DeError,
-    {
-        if value < f64::from(Self::Value::MIN) {
-            Err(F::custom("Value too low"))
-        } else if value > f64::from(Self::Value::MAX) {
-            Err(F::custom("Value too high"))
-        } else {
-            Ok(Self::Value::from(value))
-        }
-    }
+visitor_impl! {
+    u8: visit_u8;
+    u16: visit_u16;
+    u32: visit_u32;
+    u64: visit_u64;
+    i8: visit_i8;
+    i16: visit_i16;
+    i32: visit_i32;
+    i64: visit_i64;
+    f32: visit_f32;
+    f64: visit_f64;
 }
 
 #[cfg(test)]

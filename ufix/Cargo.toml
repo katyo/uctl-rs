@@ -11,6 +11,7 @@ keywords = ["fixed-point", "number", "typenum", "embedded", "no-std"]
 categories = ["algorithms", "data-structures", "embedded", "no-std"]
 
 [dependencies]
+thiserror.workspace = true
 typenum.workspace = true
 
 [dependencies.bitcode]

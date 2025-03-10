@@ -1,54 +1,43 @@
 use super::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 
-macro_rules! into_num {
-    ($TYPE: ty, $KIND: tt) => {
-        impl<R, B, E> From<Fix<R, B, E>> for $TYPE
-        where
-            R: Radix<B>,
-            B: Digits,
-            E: Exponent,
-            $TYPE: Cast<Mantissa<R, B>>,
-        {
-            fn from(Fix { bits: value, .. }: Fix<R, B, E>) -> Self {
-                // radix^|exp|
-                let ratio = R::ratio(E::I32.unsigned_abs());
-
-                // TODO: Add rounding
-
-                if 0 < E::I32 {
-                    into_num!(@$KIND, *, $TYPE, value, ratio)
-                } else {
-                    into_num!(@$KIND, /, $TYPE, value, ratio)
+macro_rules! into_impls {
+    ($kind:ident: $($type:ident),*) => {
+        $(
+            impl<R, B, E> From<Fix<R, B, E>> for $type
+            where
+                R: Radix<B>,
+                B: Digits,
+                E: Exponent,
+                $type: Cast<Mantissa<R, B>>,
+            {
+                fn from(Fix { bits: value, .. }: Fix<R, B, E>) -> Self {
+                    // radix^|exp|
+                    let ratio = R::ratio(E::I32.unsigned_abs());
+                    // TODO: Add rounding
+                    if 0 < E::I32 {
+                        into_impls!(@$kind, *, $type, value, ratio)
+                    } else {
+                        into_impls!(@$kind, /, $type, value, ratio)
+                    }
                 }
             }
-        }
+        )*
     };
 
-    (@int, $OP: tt, $TYPE: ty, $value: ident, $ratio: ident) => {
-        <$TYPE>::cast($value $OP $ratio)
+    (@int, $op: tt, $type: ty, $value: ident, $ratio: ident) => {
+        <$type>::cast($value $op $ratio)
     };
 
-    (@float, $OP: tt, $TYPE: ty, $value: ident, $ratio: ident) => {
-        <$TYPE>::cast($value) $OP <$TYPE>::cast($ratio)
+    (@float, $op: tt, $type: ty, $value: ident, $ratio: ident) => {
+        <$type>::cast($value) $op <$type>::cast($ratio)
     };
 }
 
-into_num!(i8, int);
-into_num!(i16, int);
-into_num!(i32, int);
-into_num!(i64, int);
-#[cfg(feature = "i128")]
-into_num!(i128, int);
+into_impls!(int: u8, u16, u32, u64, i8, i16, i32, i64);
+into_impls!(float: f32, f64);
 
-into_num!(u8, int);
-into_num!(u16, int);
-into_num!(u32, int);
-into_num!(u64, int);
 #[cfg(feature = "i128")]
-into_num!(u128, int);
-
-into_num!(f32, float);
-into_num!(f64, float);
+into_impls!(int: u128, i128);
 
 #[cfg(test)]
 mod test {

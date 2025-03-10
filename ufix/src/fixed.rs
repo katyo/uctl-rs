@@ -60,7 +60,7 @@ assert_eq!(Mebi::<P1>::new(3), Gibi::<P2>::new(6) / Kibi::<P1>::new(2));
 
  */
 
-use super::{Cast, Digits, Exponent, Mantissa, Radix};
+use super::{Cast, Digits, Exponent, Mantissa, Radix, Result, TryCast, TryMul};
 use core::marker::PhantomData;
 
 /**
@@ -113,13 +113,11 @@ where
     R: Radix<B>,
 {
     /// The real mantissa
-    pub bits: R::Type,
+    pub(crate) bits: R::Type,
 
     /// The phantom exponent
-    pub exp: PhantomData<E>,
+    exp: PhantomData<E>,
 }
-
-//impl<R: Clone, B: Clone, E: Clone> Copy for Fix<R, B, E> {}
 
 impl<R, B, E> Fix<R, B, E>
 where
@@ -133,7 +131,7 @@ where
     /// Maximum value
     pub const MAX: Self = Self::new(R::MAX);
 
-    /// Creates a number.
+    /// Create a number from raw value.
     ///
     /// # Examples
     ///
@@ -144,6 +142,7 @@ where
     /// Milli::<P2>::new(25); // 0.025
     /// Kilo::<P2>::new(25); // 25 000
     /// ```
+    #[inline(always)]
     pub const fn new(bits: R::Type) -> Self {
         Fix {
             bits,
@@ -151,7 +150,13 @@ where
         }
     }
 
-    /// Converts to another _Exp_.
+    /// Get raw value of a number.
+    #[inline(always)]
+    pub const fn into_inner(self) -> R::Type {
+        self.bits
+    }
+
+    /// Convert to another _Exp_.
     fn into_exp<Er>(self) -> Fix<R, B, Er>
     where
         Er: Exponent,
@@ -201,6 +206,59 @@ where
             self.into_bits::<Br>().into_exp::<Er>()
         } else {
             self.into_exp::<Er>().into_bits::<Br>()
+        }
+    }
+
+    /// Convert to another _Exp_.
+    fn try_into_exp<Er>(self) -> Result<Fix<R, B, Er>>
+    where
+        Er: Exponent,
+    {
+        // radix^|exp-to_exp|
+        let ratio = R::ratio((E::I32 - Er::I32).unsigned_abs());
+
+        Ok(if E::I32 < Er::I32 {
+            Fix::new(self.bits / ratio)
+        } else {
+            Fix::new(self.bits.try_mul(ratio)?)
+        })
+    }
+
+    /// Convert to another _Bits_.
+    fn try_into_bits<Br>(self) -> Result<Fix<R, Br, E>>
+    where
+        R: Radix<Br>,
+        Br: Digits,
+        Mantissa<R, Br>: TryCast<Mantissa<R, B>>,
+    {
+        Mantissa::<R, Br>::try_cast(self.bits).map(Fix::new)
+    }
+
+    /// Converts to another _Bits_ and/or _Exp_.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use typenum::{P1, P7};
+    /// use ufix::si::{Kilo, Milli};
+    ///
+    /// let kilo = Kilo::<P1>::new(5);
+    /// let milli = Milli::<P7>::new(5_000_000);
+    ///
+    /// assert_eq!(kilo, milli.convert());
+    /// assert_eq!(milli, kilo.convert());
+    /// ```
+    pub fn try_convert<Br, Er>(self) -> Result<Fix<R, Br, Er>>
+    where
+        R: Radix<Br>,
+        Er: Exponent,
+        Br: Digits,
+        Mantissa<R, Br>: TryCast<Mantissa<R, B>>,
+    {
+        if B::I32 < Br::I32 {
+            self.try_into_bits::<Br>().and_then(Fix::try_into_exp::<Er>)
+        } else {
+            self.try_into_exp::<Er>().and_then(Fix::try_into_bits::<Br>)
         }
     }
 }

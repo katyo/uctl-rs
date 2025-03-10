@@ -13,6 +13,7 @@ repository = "https://github.com/katyo/uctl-rs"
 license = "MIT"
 
 [workspace.dependencies]
+thiserror = "2"
 typenum = "1"
 generic-array = "1"
 derive_deref = "1"

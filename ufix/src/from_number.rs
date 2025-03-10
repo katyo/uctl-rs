@@ -1,26 +1,28 @@
 use super::{Cast, Digits, Exponent, Fix, Mantissa, Radix};
 
-macro_rules! from_num {
-    ($TYPE: ty, $KIND: tt) => {
-        impl<R, B, E> From<$TYPE> for Fix<R, B, E>
-        where
-            R: Radix<B>,
-            B: Digits,
-            E: Exponent,
-            $TYPE: Cast<Mantissa<R, B>>,
-            Mantissa<R, B>: Cast<$TYPE>,
-        {
-            fn from(value: $TYPE) -> Self {
-                // radix^|exp|
-                let ratio = R::ratio(E::I32.unsigned_abs());
-                // TODO: Add rounding
-                Self::new(if 0 < E::I32 {
-                    from_num!(@$KIND, /, $TYPE, Mantissa<R, B>, value, ratio)
-                } else {
-                    from_num!(@$KIND, *, $TYPE, Mantissa<R, B>, value, ratio)
-                })
+macro_rules! from_impls {
+    ($kind:ident: $($type:ident),*) => {
+        $(
+            impl<R, B, E> From<$type> for Fix<R, B, E>
+            where
+                R: Radix<B>,
+                B: Digits,
+                E: Exponent,
+                $type: Cast<Mantissa<R, B>>,
+                Mantissa<R, B>: Cast<$type>,
+            {
+                fn from(value: $type) -> Self {
+                    // radix^|exp|
+                    let ratio = R::ratio(E::I32.unsigned_abs());
+                    // TODO: Add rounding
+                    Self::new(if 0 < E::I32 {
+                        from_impls!(@$kind, /, $type, Mantissa<R, B>, value, ratio)
+                    } else {
+                        from_impls!(@$kind, *, $type, Mantissa<R, B>, value, ratio)
+                    })
+                }
             }
-        }
+        )*
     };
 
     (@float, $OP: tt, $TYPE: ty, $BITS: ty, $value: ident, $ratio: ident) => {
@@ -32,22 +34,11 @@ macro_rules! from_num {
     };
 }
 
-from_num!(i8, int);
-from_num!(i16, int);
-from_num!(i32, int);
-from_num!(i64, int);
-#[cfg(feature = "i128")]
-from_num!(i128, int);
+from_impls!(int: u8, u16, u32, u64, i8, i16, i32, i64);
+from_impls!(float: f32, f64);
 
-from_num!(u8, int);
-from_num!(u16, int);
-from_num!(u32, int);
-from_num!(u64, int);
 #[cfg(feature = "i128")]
-from_num!(u128, int);
-
-from_num!(f32, float);
-from_num!(f64, float);
+from_impls!(int: u128, i128);
 
 #[cfg(test)]
 mod test {
