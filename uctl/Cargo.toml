@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "uctl"
 description = "Generic control library for low-end hardware"
 version.workspace = true
