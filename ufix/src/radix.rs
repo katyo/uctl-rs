@@ -2,7 +2,7 @@ use crate::{FromPositive, Positive, TryMul, UnsignedPow};
 use core::ops::{Div, Mul};
 
 /// The trait which infers type for store the value according to given radix parameter
-pub trait Radix<B>: Positive + Sized + Copy {
+pub trait Radix<B>: Positive + Sized + Copy + 'static {
     /// The integer type which can hold required number of digits with this radix
     type Type: Sized
         + Copy
@@ -10,7 +10,8 @@ pub trait Radix<B>: Positive + Sized + Copy {
         + UnsignedPow
         + Mul<Output = Self::Type>
         + Div<Output = Self::Type>
-        + TryMul<Output = Self::Type>;
+        + TryMul<Output = Self::Type>
+        + 'static;
 
     /// Minimum value of integer type
     const MIN: Self::Type;

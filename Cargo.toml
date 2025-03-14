@@ -17,6 +17,7 @@ thiserror = "2"
 typenum = "1"
 generic-array = "1"
 derive_deref = "1"
+bytemuck = "1"
 serde_json = "1"
 
 [workspace.dependencies.bitcode]

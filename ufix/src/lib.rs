@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-#![forbid(unsafe_code)]
+#![cfg_attr(not(feature = "bytemuck"), forbid(unsafe_code))]
 #![forbid(missing_docs)]
 #![doc = include_str!("../README.md")]
 
@@ -19,6 +19,9 @@ mod radix;
 mod try_mul;
 mod types;
 mod unsigned_pow;
+
+#[cfg(feature = "bytemuck")]
+mod bytemuck_impl;
 
 //#[cfg(feature = "bitcode")]
 //mod bitcode_impl;
