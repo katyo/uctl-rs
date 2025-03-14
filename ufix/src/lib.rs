@@ -8,6 +8,7 @@ mod arithmetic;
 mod cast;
 mod cast_fixed;
 mod comparison;
+mod error;
 mod fixed;
 mod format;
 mod from_number;
@@ -27,23 +28,10 @@ mod serde_impl;
 
 pub use aliases::*;
 pub use cast::{Cast, TryCast};
+pub use error::{Error, Result};
 pub use fixed::Fix;
 pub use positive::{FromPositive, Positive};
 pub use radix::{Mantissa, Radix};
 pub use try_mul::TryMul;
 pub use types::{Digits, Exponent};
 pub use unsigned_pow::UnsignedPow;
-
-/// Fixed-point number error
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    /// Number is too small to convert safely
-    #[error("Number is too small to convert")]
-    TooSmall,
-    /// Number is too big to convert safely
-    #[error("Number is too big to convert")]
-    TooBig,
-}
-
-/// Fixed-point number result
-pub type Result<T> = core::result::Result<T, Error>;
