@@ -81,6 +81,14 @@ jobs:
           - task: test
             rust: stable
             target: x86_64-unknown-linux-gnu
+            features: bytemuck
+          - task: test
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+            features: serde
+          - task: test
+            rust: stable
+            target: x86_64-unknown-linux-gnu
             features: all
 
           # Test targets
