@@ -6,7 +6,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.2"
+version = "0.1.4"
 authors = ["K. <kayo@illumium.org>"]
 edition = "2021"
 repository = "https://github.com/katyo/uctl-rs"
